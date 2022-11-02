@@ -20,7 +20,7 @@ terraform {
 
 provider "aws" {
   region  = var.region
-  profile = "${var.project}-${terraform.workspace}"
+  # profile = "${var.project}"
 
 
   default_tags {
