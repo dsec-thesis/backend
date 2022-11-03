@@ -13,7 +13,7 @@ terraform {
     dynamodb_table = "parking-locks"
     key            = "tf/state.tfstate"
     region         = "us-east-1"
-    profile        = "parking-dev"
+    # profile        = "parking-dev"
   }
 }
 
