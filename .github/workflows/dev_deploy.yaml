@@ -23,6 +23,7 @@ jobs:
           python-version: '3.9'
           cache: 'poetry'
       - run: poetry install
+      - run: poetry run black --check
       - run: poetry run pytest
       - uses: aws-actions/configure-aws-credentials@v2
         with:
