@@ -26,5 +26,5 @@ jobs:
       - uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          envkey_GOOGLE_CLIENT_SECRETS: ${{ secrets.GOOGLE_CLIENT_SECRETS }}
+          envkey_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       - run: npx serverless deploy --stage ${{ vars.SLS_STAGE }} --region ${{ vars.AWS_DEFAULT_REGION }}
