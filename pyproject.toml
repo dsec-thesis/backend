@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["emanuelcima <emanuel.cima@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.95.1"
+werkzeug = "^2.2.3"
+mangum = "^0.17.0"
+
+[tool.poetry.group.dev.dependencies]
+boto3 = "^1.26.114"
+pytest = "^7.3.1"
+uvicorn = "^0.21.1"
+taskipy = "^1.10.4"
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.taskipy.tasks]
+serve = {cmd = "uvicorn --app-dir backend --reload api.app:app", help = "run server locally"}
+deploy_dev = "npx serverless deploy --stage dev"

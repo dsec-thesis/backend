@@ -1,0 +1,29 @@
+name: Serverless deploy
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: Dev Deploy
+    environment: dev
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: vars.AWS_ROLE_TO_ASUME
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npx serverless deploy --stage ${{ vars.SLS_STAGE }} --region ${{ vars.AWS_DEFAULT_REGION }}
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRETS: ${{ secrets.GOOGLE_CLIENT_SECRETS }}

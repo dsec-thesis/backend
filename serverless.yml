@@ -1,0 +1,142 @@
+service: smartparking
+frameworkVersion: "3"
+useDotenv: true
+
+custom:
+  pythonRequirements:
+    usePoetry: true
+  userPoolIssuerUrl:
+    !Join [
+      "",
+      [
+        "https://cognito-idp.${aws:region}.amazonaws.com/",
+        !Ref UserPool,
+      ],
+    ]
+
+provider:
+  name: aws
+  runtime: python3.9
+  httpApi:
+    authorizers:
+      cognito:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: ${self:custom.userPoolIssuerUrl}
+        audience:
+          - !Ref UserPoolClientFlutter
+
+plugins:
+  - serverless-python-requirements
+  - serverless-iam-roles-per-function
+
+functions:
+  api:
+    handler: backend/api.app.handler
+    events:
+      - httpApi:
+          path: "*"
+          method: "*"
+          authorizer:
+            name: cognito
+
+resources:
+  Resources:
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${sls:stage}
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: False
+        DeletionProtection: INACTIVE
+        EmailConfiguration:
+          EmailSendingAccount: COGNITO_DEFAULT
+        MfaConfiguration: OFF
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+            RequireUppercase: true
+        Schema:
+          - Name: email
+            Mutable: true
+            Required: true
+          - Name: given_name
+            Mutable: true
+            Required: false
+          - Name: family_name
+            Mutable: true
+            Required: false
+        UsernameAttributes:
+          - email
+        UsernameConfiguration:
+          CaseSensitive: false
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_CODE
+          EmailMessage: Your verification code is {####}
+          EmailSubject: Your verification code
+        AutoVerifiedAttributes:
+          - email
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${self:service}-${sls:stage}
+        UserPoolId: !Ref UserPool
+    GoogleIdentityProvider:
+      Type: AWS::Cognito::UserPoolIdentityProvider
+      Properties:
+        AttributeMapping:
+          given_name: "given_name"
+          family_name: "family_name"
+          email: "email"
+        ProviderDetails:
+          client_id: ${env:GOOGLE_CLIENT_ID}
+          client_secret: ${env:GOOGLE_CLIENT_SECRET}
+          authorize_scopes: "openid email profile"
+        ProviderName: Google
+        ProviderType: Google
+        UserPoolId: !Ref UserPool
+    UserPoolClientFlutter:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        AccessTokenValidity: 1
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - profile
+          - openid
+          - aws.cognito.signin.user.admin
+        AuthSessionValidity: 3
+        CallbackURLs:
+          - myapp://
+        ClientName: flutter-app
+        DefaultRedirectURI: myapp://
+        EnablePropagateAdditionalUserContextData: false
+        EnableTokenRevocation: true
+        ExplicitAuthFlows:
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+        GenerateSecret: false
+        IdTokenValidity: 1
+        LogoutURLs:
+          - myapp://
+        PreventUserExistenceErrors: ENABLED
+        RefreshTokenValidity: 1
+        SupportedIdentityProviders:
+          - COGNITO
+          - Google
+        TokenValidityUnits:
+          AccessToken: hours
+          IdToken: hours
+          RefreshToken: days
+        UserPoolId: !Ref UserPool
+      DependsOn:
+        - GoogleIdentityProvider
