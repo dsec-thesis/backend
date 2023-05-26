@@ -8,10 +8,7 @@ custom:
   userPoolIssuerUrl:
     !Join [
       "",
-      [
-        "https://cognito-idp.${aws:region}.amazonaws.com/",
-        !Ref UserPool,
-      ],
+      ["https://cognito-idp.${aws:region}.amazonaws.com/", !Ref UserPool],
     ]
 
 provider:
@@ -32,13 +29,30 @@ plugins:
 
 functions:
   api:
-    handler: backend/api.app.handler
+    handler: backend/api.main.handler
     events:
       - httpApi:
           path: "*"
           method: "*"
           authorizer:
             name: cognito
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+        Resource: !GetAtt DynamodbTable.Arn
+      - Effect: Allow
+        Action:
+          - sns:Publish
+        Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${sls:stage}
+
+  sns:
+    handler: backend/events.main.handler
+    events:
+      - sns:
+          topicName: ${self:service}-${sls:stage}
+          displayName: Smart parking domain events
 
 resources:
   Resources:
@@ -140,3 +154,18 @@ resources:
         UserPoolId: !Ref UserPool
       DependsOn:
         - GoogleIdentityProvider
+    DynamodbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
