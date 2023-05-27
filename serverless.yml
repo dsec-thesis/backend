@@ -10,6 +10,8 @@ custom:
       "",
       ["https://cognito-idp.${aws:region}.amazonaws.com/", !Ref UserPool],
     ]
+  dynamoTableName: ${self:service}-${sls:stage}
+  snsTopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${sls:stage}
 
 provider:
   name: aws
@@ -29,30 +31,39 @@ plugins:
 
 functions:
   api:
-    handler: backend/api.main.handler
+    handler: backend/apps.api.main.handler
     events:
       - httpApi:
           path: "*"
           method: "*"
           authorizer:
             name: cognito
+    environment:
+      DYNAMO_TABLE: ${self:custom.dynamoTableName}
+      SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
+      ENV: AWS_LAMBDA_MANGUM
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:GetItem
           - dynamodb:PutItem
+          - dynamodb:Query
         Resource: !GetAtt DynamodbTable.Arn
       - Effect: Allow
         Action:
           - sns:Publish
-        Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${sls:stage}
+        Resource: ${self:custom.snsTopicArn}
 
   sns:
-    handler: backend/events.main.handler
+    handler: backend/apps.events.main.handler
     events:
       - sns:
           topicName: ${self:service}-${sls:stage}
           displayName: Smart parking domain events
+    environment:
+      DYNAMO_TABLE: ${self:custom.dynamoTableName}
+      SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
+      ENV: AWS_LAMBDA_MANGUM
 
 resources:
   Resources:
@@ -157,7 +168,7 @@ resources:
     DynamodbTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-${sls:stage}
+        TableName: ${self:custom.dynamoTableName}
         AttributeDefinitions:
           - AttributeName: pk
             AttributeType: S
