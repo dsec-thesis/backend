@@ -28,7 +28,7 @@ def create_booking(
 ) -> None:
     booking = BookingAggregate.create(booking_id, driver_id, parkinglot_id)
     repo.save(booking)
-    bus.publish(booking.events)
+    bus.publish(booking.pull_events())
 
 
 def list_bookings(

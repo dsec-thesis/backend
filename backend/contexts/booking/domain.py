@@ -1,11 +1,10 @@
-from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, List, Optional, Protocol
+from typing import List, Optional, Protocol
 
-from pydantic import BaseModel
 
 from backend.contexts.shared.domain import (
+    AggregateRoot,
     BookingId,
     DomainEvent,
     DriverId,
@@ -20,40 +19,23 @@ class BookingState(Enum):
     CANCELED = "CANCELED"
 
 
-class AccommodatedBookingCanceledData(BaseModel):
+class AccommodatedBookingCanceled(DomainEvent[BookingId]):
     parkinglot_id: ParkinglotId
 
 
-class AccommodatedBookingCanceled(DomainEvent[AccommodatedBookingCanceledData]):
-    NAME: ClassVar[str] = "AccommodatedBookingCanceled"
-
-
-class BookingCanceledData(BaseModel):
+class BookingCanceled(DomainEvent[BookingId]):
     parkinglot_id: ParkinglotId
 
 
-class BookingCanceled(DomainEvent[BookingCanceledData]):
-    NAME: ClassVar[str] = "AccommodatedBookingCanceled"
-
-
-@dataclass
-class BookingCreatedData:
+class BookingCreated(DomainEvent[BookingId]):
     parkinglot_id: ParkinglotId
 
 
-class BookingCreated(DomainEvent[BookingCreatedData]):
-    NAME: ClassVar[str] = "BookingCreated"
-
-
-@dataclass
-class BookingAggregate:
-    id: BookingId
+class BookingAggregate(AggregateRoot[BookingId]):
     driver_id: DriverId
     parkinglot_id: ParkinglotId
     state: BookingState
-    version: int
     price: Optional[Decimal]
-    events: List[DomainEvent] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -67,16 +49,12 @@ class BookingAggregate:
             driver_id=driver_id,
             parkinglot_id=parkinglot_id,
             state=BookingState.CREATED,
-            version=0,
             price=None,
-            events=[],
         )
-        booking.events.append(
+        booking.push_event(
             BookingCreated(
-                aggregate_id=str(booking.id),
-                data=BookingCreatedData(
-                    parkinglot_id=booking.parkinglot_id,
-                ),
+                aggregate_id=booking.id,
+                parkinglot_id=booking.parkinglot_id,
             )
         )
         return booking
@@ -85,20 +63,16 @@ class BookingAggregate:
         if self.state == BookingState.CANCELED:
             return
         if self.state == BookingState.ACCOMMODATED:
-            self.events.append(
+            self.push_event(
                 AccommodatedBookingCanceled(
-                    aggregate_id=str(self.id),
-                    data=AccommodatedBookingCanceledData(
-                        parkinglot_id=self.parkinglot_id,
-                    ),
+                    aggregate_id=self.id,
+                    parkinglot_id=self.parkinglot_id,
                 )
             )
-        self.events.append(
+        self.push_event(
             BookingCanceled(
-                aggregate_id=str(self.id),
-                data=BookingCanceledData(
-                    parkinglot_id=self.parkinglot_id,
-                ),
+                aggregate_id=self.id,
+                parkinglot_id=self.parkinglot_id,
             )
         )
         self.state = BookingState.CANCELED

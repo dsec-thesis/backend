@@ -28,7 +28,7 @@ class SnsEventBus(EventBus):
                     "MessageAttributes": {
                         "name": {
                             "DataType": "String",
-                            "StringValue": e.NAME,
+                            "StringValue": e.event_name,
                         },
                         "aggregate_id": {
                             "DataType": "String",
