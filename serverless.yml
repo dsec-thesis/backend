@@ -5,12 +5,16 @@ useDotenv: true
 custom:
   pythonRequirements:
     usePoetry: true
+    dockerizePip: true
   userPoolIssuerUrl:
     !Join [
       "",
       ["https://cognito-idp.${aws:region}.amazonaws.com/", !Ref UserPool],
     ]
   dynamoTableName: ${self:service}-${sls:stage}
+  h3CellIndexName: H3CellIndex
+  dynamodbTableArn: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-${sls:stage}
+  dynamodbAppResourcesArn: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-${sls:stage}/*
   snsTopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${sls:stage}
 
 provider:
@@ -40,6 +44,7 @@ functions:
             name: cognito
     environment:
       DYNAMO_TABLE: ${self:custom.dynamoTableName}
+      H3_CELL_INDEX: ${self:custom.h3CellIndexName}
       SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
       ENV: AWS_LAMBDA_MANGUM
     iamRoleStatements:
@@ -48,7 +53,9 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
           - dynamodb:Query
-        Resource: !GetAtt DynamodbTable.Arn
+        Resource:
+          - ${self:custom.dynamodbTableArn}
+          - ${self:custom.dynamodbAppResourcesArn}
       - Effect: Allow
         Action:
           - sns:Publish
@@ -62,6 +69,7 @@ functions:
           displayName: Smart parking domain events
     environment:
       DYNAMO_TABLE: ${self:custom.dynamoTableName}
+      H3_CELL_INDEX: ${self:custom.h3CellIndexName}
       SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
       ENV: AWS_LAMBDA_MANGUM
 
@@ -174,9 +182,24 @@ resources:
             AttributeType: S
           - AttributeName: sk
             AttributeType: S
+          - AttributeName: h3cell
+            AttributeType: S
         KeySchema:
           - AttributeName: pk
             KeyType: HASH
           - AttributeName: sk
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:custom.h3CellIndexName}
+            KeySchema:
+              - AttributeName: h3cell
+                KeyType: HASH
+              - AttributeName: sk
+                KeyType: RANGE
+            Projection:
+              ProjectionType: INCLUDE
+              NonKeyAttributes:
+                - name
+                - street
+                - coordinates
