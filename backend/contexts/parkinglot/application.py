@@ -72,9 +72,6 @@ class ChangeParkinglotPriceCommand(BaseModel):
         repo: ParkinglotRepository,
         bus: EventBus,
     ) -> None:
-        import pdb
-
-        pdb.set_trace()
         if not (parkinglot := repo.get(self.parkinglot_id, owner_id)):
             return None
         parkinglot.change_price(self.price)
