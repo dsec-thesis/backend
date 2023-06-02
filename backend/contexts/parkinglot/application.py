@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from backend.contexts.parkinglot.domain import (
-    Address,
+    Coordinates,
     ParkinglotAggregate,
     ParkinglotRepository,
     Price,
@@ -22,7 +22,8 @@ from backend.contexts.shared.domain import (
 class CreateParkinglotCommand(BaseModel):
     parkinglot_id: ParkinglotId
     name: str
-    address: Address
+    street: str
+    coordinates: Coordinates
     price: Price
 
     def handle(
@@ -35,7 +36,8 @@ class CreateParkinglotCommand(BaseModel):
             parkinglot_id=self.parkinglot_id,
             owner_id=owner_id,
             name=self.name,
-            address=self.address,
+            street=self.street,
+            coordinates=self.coordinates,
             price=self.price,
         )
         repo.save(parkinglot)

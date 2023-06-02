@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import List, Optional, Protocol
 
 from pydantic import BaseModel, Field
+import h3
 
 from backend.contexts.shared.domain import (
     AggregateRoot,
@@ -17,14 +18,9 @@ from backend.contexts.shared.domain import (
 Price = Decimal
 
 
-class Coordinate(BaseModel):
-    latitude: float = Field(..., ge=-90, le=90)
-    longitude: float = Field(..., gt=-180, le=180)
-
-
-class Address(BaseModel):
-    street: str
-    coordinate: Coordinate
+class Coordinates(BaseModel):
+    lat: Decimal = Field(..., ge=-90, le=90)
+    lng: Decimal = Field(..., gt=-180, le=180)
 
 
 class ParkingSpace(BaseModel):
@@ -52,7 +48,9 @@ class ParkingSpace(BaseModel):
 class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
     owner_id: OwnerId
     name: str
-    address: Address
+    street: str
+    coordinates: Coordinates
+    h3cell: str
     price: Price
     free_spaces: int = 0
     spaces: List[ParkingSpace] = Field(default_factory=list)
@@ -63,14 +61,17 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         parkinglot_id: ParkinglotId,
         owner_id: OwnerId,
         name: str,
-        address: Address,
+        street: str,
+        coordinates: Coordinates,
         price: Price,
     ) -> "ParkinglotAggregate":
         parkinglot = cls(
             id=parkinglot_id,
             owner_id=owner_id,
             name=name,
-            address=address,
+            street=street,
+            coordinates=coordinates,
+            h3cell=h3.latlng_to_cell(coordinates.lat, coordinates.lng, 8),
             price=price,
         )
         parkinglot.push_event(
@@ -78,7 +79,8 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
                 aggregate_id=parkinglot.id,
                 owner_id=parkinglot.owner_id,
                 name=parkinglot.name,
-                address=parkinglot.address,
+                street=parkinglot.street,
+                coordinates=parkinglot.coordinates,
             )
         )
         return parkinglot
@@ -115,7 +117,8 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
 class ParkinglotCreated(DomainEvent[ParkinglotId]):
     owner_id: OwnerId
     name: str
-    address: Address
+    street: str
+    coordinates: Coordinates
 
 
 class BookingAccommodated(DomainEvent[ParkinglotId]):

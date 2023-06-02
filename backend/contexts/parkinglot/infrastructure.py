@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
@@ -30,8 +30,8 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
 
     def get(
         self,
-        owner_id: OwnerId,
         parkinglot_id: ParkinglotId,
+        owner_id: Optional[OwnerId] = None,
     ) -> Optional[ParkinglotAggregate]:
         item = self._table.get_item(
             Key={
@@ -40,7 +40,7 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
             }
         )["Item"]
 
-        return ParkinglotAggregate.parse_obj(item) if item else None
+        return ParkinglotAggregate.parse_obj(self._parse_item(item)) if item else None
 
     def list(self, owner_id: OwnerId) -> List[ParkinglotAggregate]:
         items = self._table.query(
@@ -49,7 +49,14 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
             ),
         )["Items"]
 
-        return parse_obj_as(List[ParkinglotAggregate], items)
+        return parse_obj_as(
+            List[ParkinglotAggregate], (self._parse_item(i) for i in items)
+        )
+
+    def _parse_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        item["owner_id"] = item["pk"]
+        item["id"] = str(item["sk"]).split("::")[1]
+        return item
 
 
 class RamParkinglotRepository(ParkinglotRepository):
@@ -58,8 +65,8 @@ class RamParkinglotRepository(ParkinglotRepository):
 
     def get(
         self,
-        owner_id: OwnerId,
         parkinglot_id: ParkinglotId,
+        owner_id: Optional[OwnerId] = None,
     ) -> Optional[ParkinglotAggregate]:
         return super().get(parkinglot_id, owner_id)
 
