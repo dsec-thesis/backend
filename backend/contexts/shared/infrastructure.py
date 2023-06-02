@@ -32,7 +32,7 @@ class SnsEventBus(EventBus):
                         },
                         "aggregate_id": {
                             "DataType": "String",
-                            "StringValue": e.aggregate_id,
+                            "StringValue": str(e.aggregate_id),
                         },
                     },
                 }
