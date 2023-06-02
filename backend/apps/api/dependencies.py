@@ -15,6 +15,11 @@ from backend.contexts.parkinglot.infrastructure import (
     DynamodbParkinglotRepository,
     RamParkinglotRepository,
 )
+from backend.contexts.searcher.domain import ParkinglotSearchRepository
+from backend.contexts.searcher.infraestructure import (
+    DynamodbParkinglotSearchRepository,
+    RamParkinglotSearchRepository,
+)
 from backend.contexts.shared.domain import EventBus
 from backend.contexts.shared.infrastructure import RamEventBus, SnsEventBus
 
@@ -68,3 +73,15 @@ def create_parkinglot_repository(
     if settings.dynamo_table:
         return DynamodbParkinglotRepository(settings.dynamo_table)
     return RamParkinglotRepository()
+
+
+@lru_cache
+def create_parkinglot_search_repository(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> ParkinglotSearchRepository:
+    if settings.dynamo_table and settings.h3_cell_index:
+        return DynamodbParkinglotSearchRepository(
+            settings.dynamo_table,
+            settings.h3_cell_index,
+        )
+    return RamParkinglotSearchRepository()
