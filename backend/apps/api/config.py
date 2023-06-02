@@ -11,6 +11,7 @@ class Env(Enum):
 
 class Settings(BaseSettings):
     dynamo_table: Optional[str] = None
+    h3_cell_index: Optional[str] = None
     sns_topic_arn: Optional[str] = None
     env: Env = Env.LOCAL
     test_user_id: Optional[UUID] = None
