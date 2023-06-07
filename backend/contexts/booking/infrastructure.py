@@ -11,6 +11,7 @@ from backend.contexts.booking.domain import (
 from backend.contexts.shared.domain import BookingId
 from backend.contexts.shared.domain import ParkinglotId
 from backend.contexts.shared.domain import DriverId
+from boto3.dynamodb.conditions import Attr, Key
 
 
 class DynamodbBookingRepository(BookingRepository):
@@ -52,8 +53,9 @@ class DynamodbBookingRepository(BookingRepository):
         driver_id: DriverId,
     ) -> List[BookingAggregate]:
         items = self._table.query(
-            KeyConditionExpression="pk = :value",
-            ExpressionAttributeValues={":value": str(driver_id)},
+            KeyConditionExpression=(
+                Key("pk").eq(str(driver_id)) & Key("sk").begins_with("BOOKING::")
+            )
         )["Items"]
 
         return [self._item_to_booking(item) for item in items]
