@@ -34,7 +34,6 @@ def get_user_id(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> uuid.UUID:
     if settings.env == Env.AWS_LAMBDA_MAGNUM:
-        print(request.scope)
         return uuid.UUID(
             request.scope["aws.event"]["requestContext"]["authorizer"]["jwt"]["claims"][
                 "sub"

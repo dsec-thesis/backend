@@ -68,6 +68,8 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         parkinglot = cls(
             id=parkinglot_id,
             owner_id=owner_id,
+            created_on=datetime.now(),
+            updated_on=datetime.now(),
             name=name,
             street=street,
             coordinates=coordinates,
@@ -87,6 +89,7 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
 
     def change_price(self, price: Price) -> None:
         self.price = price
+        self.refresh_updated_on()
 
     def find_free_space(self) -> Optional[ParkingSpace]:
         return next((s for s in self.spaces if s.booking_id is None), None)
@@ -103,6 +106,7 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
             return None
         free_space.book(driver_id, booking_id, booking_duration)
         self.free_spaces -= 1
+        self.refresh_updated_on()
         return self.price * Decimal(booking_duration.total_seconds())
 
     def register_spaces(self, space_ids: List[ParkingSpaceId]) -> None:
@@ -112,6 +116,7 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
             self.push_event(
                 ParkingSpaceCreated(aggregate_id=self.id, space_id=space.id)
             )
+        self.refresh_updated_on()
 
 
 class ParkinglotCreated(DomainEvent[ParkinglotId]):

@@ -1,17 +1,15 @@
+from decimal import Decimal
+import json
 from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 
 from backend.contexts.booking.domain import (
     BookingAggregate,
     BookingRepository,
-    BookingState,
 )
-from backend.contexts.shared.domain import BookingId
-from backend.contexts.shared.domain import ParkinglotId
-from backend.contexts.shared.domain import DriverId
-from boto3.dynamodb.conditions import Attr, Key
+from backend.contexts.shared.domain import BookingId, DriverId
 
 
 class DynamodbBookingRepository(BookingRepository):
@@ -20,14 +18,17 @@ class DynamodbBookingRepository(BookingRepository):
         self._table = resource.Table(table_name)
 
     def save(self, booking: BookingAggregate) -> None:
+        item = json.loads(
+            booking.json(exclude={"id", "driver_id", "version"}),
+            parse_float=Decimal,
+        )
+
         self._table.put_item(
             Item={
                 "pk": str(booking.driver_id),
                 "sk": f"BOOKING::{booking.id}",
-                "parkinglot_id": str(booking.parkinglot_id),
-                "state": booking.state.value,
                 "version": booking.version + 1,
-                "price": booking.price,
+                **item,
             },
             ConditionExpression=(
                 Attr("version").not_exists() | Attr("version").eq(booking.version)
@@ -55,7 +56,8 @@ class DynamodbBookingRepository(BookingRepository):
         items = self._table.query(
             KeyConditionExpression=(
                 Key("pk").eq(str(driver_id)) & Key("sk").begins_with("BOOKING::")
-            )
+            ),
+            ScanIndexForward=False,
         )["Items"]
 
         return [self._item_to_booking(item) for item in items]
@@ -64,14 +66,12 @@ class DynamodbBookingRepository(BookingRepository):
         self,
         item: Dict[str, Any],
     ) -> BookingAggregate:
-        return BookingAggregate(
-            id=BookingId(item["sk"].split("::")[1]),  # type: ignore
-            driver_id=DriverId(item["pk"]),  # type: ignore
-            parkinglot_id=ParkinglotId(item["parkinglot_id"]),  # type: ignore
-            state=BookingState(item["state"]),
-            version=item["version"],  # type: ignore
-            price=item["price"],  # type: ignore
-        )
+        item = {
+            "id": item["sk"].split("::")[1],
+            "driver_id": item["pk"],
+            **item,
+        }
+        return BookingAggregate.parse_obj(item)
 
 
 class RamBookingRepository(BookingRepository):

@@ -2,7 +2,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Protocol
 
-
 from backend.contexts.shared.domain import (
     AggregateRoot,
     BookingId,
@@ -48,6 +47,8 @@ class BookingAggregate(AggregateRoot[BookingId]):
             id=id,
             driver_id=driver_id,
             parkinglot_id=parkinglot_id,
+            created_on=id.datetime,
+            updated_on=id.datetime,
             state=BookingState.CREATED,
             price=None,
         )
@@ -76,10 +77,12 @@ class BookingAggregate(AggregateRoot[BookingId]):
             )
         )
         self.state = BookingState.CANCELED
+        self.refresh_updated_on()
 
     def assign_price(self, price: Decimal) -> None:
         self.price = price
         self.state = BookingState.ACCOMMODATED
+        self.refresh_updated_on()
 
     def pay(self) -> None:
         ...

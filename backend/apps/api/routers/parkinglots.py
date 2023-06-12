@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, status
 
@@ -8,7 +8,7 @@ from backend.apps.api.dependencies import (
     get_user_id,
 )
 from backend.contexts.parkinglot import application as parkinglot
-from backend.contexts.parkinglot.domain import ParkinglotRepository
+from backend.contexts.parkinglot.domain import ParkinglotAggregate, ParkinglotRepository
 from backend.contexts.shared.domain import EventBus, OwnerId, ParkinglotId
 
 router = APIRouter()
@@ -28,7 +28,7 @@ def create_parkinglot(
 def list_parkinglots(
     owner_id: Annotated[OwnerId, Depends(get_user_id)],
     repo: Annotated[ParkinglotRepository, Depends(create_parkinglot_repository)],
-):
+) -> List[ParkinglotAggregate]:
     return parkinglot.list_parkinglots(owner_id, repo)
 
 

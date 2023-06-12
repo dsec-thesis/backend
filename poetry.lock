@@ -1133,6 +1133,18 @@ files = [
 six = ">=1.5"
 
 [[package]]
+name = "python-ulid"
+version = "1.1.0"
+description = "Universally Unique Lexicographically Sortable Identifier"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-ulid-1.1.0.tar.gz", hash = "sha256:5fb5e4a91db8ca93e8938a613360b3def299b60d41f847279a8c39c9b2e9c65e"},
+    {file = "python_ulid-1.1.0-py3-none-any.whl", hash = "sha256:88c952f6be133dbede19c907d72d26717d2691ec8421512b573144794d891e24"},
+]
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 description = "Python HTTP for Humans."
@@ -1360,4 +1372,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "351ac9f3592e125ac7cedf503008df75680821460a5803131a8a8985cf776bad"
+content-hash = "24ce76cba70d0445a978a7af9c26cc90518dff0a3482d1df950cb796328f4491"

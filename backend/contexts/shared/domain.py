@@ -1,15 +1,33 @@
+import uuid
 from datetime import datetime
 from typing import Generic, List, Protocol, TypeVar
-import uuid
 
+import ulid
 from pydantic import BaseModel, Field, PrivateAttr
-from uuid import UUID, uuid4
 
 EventData = TypeVar("EventData")
 AggregateId = TypeVar("AggregateId")
 
 
-class BookingId(uuid.UUID):
+class ULID(ulid.ULID):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        return v if isinstance(v, ULID) else ULID.from_str(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(
+            type="string",
+            format="ulid",
+            examples=[str(ULID()), str(ULID())],
+        )
+
+
+class BookingId(ULID):
     ...
 
 
@@ -30,13 +48,17 @@ class ParkingSpaceId(uuid.UUID):
 
 
 class DomainEvent(BaseModel, Generic[AggregateId]):
-    id: UUID = Field(default_factory=uuid4)
+    id: ULID = Field(default_factory=ULID)
     aggregate_id: AggregateId
-    created_on: datetime = Field(default_factory=datetime.now)
 
     @property
     def event_name(self) -> str:
         return type(self).__name__
+
+    class Config:
+        json_encoders = {
+            ULID: lambda v: str(v),
+        }
 
 
 class EventBus(Protocol):
@@ -47,6 +69,8 @@ class EventBus(Protocol):
 class AggregateRoot(BaseModel, Generic[AggregateId]):
     id: AggregateId
     version: int = 0
+    created_on: datetime
+    updated_on: datetime
     _events: List[DomainEvent[AggregateId]] = PrivateAttr(default_factory=list)
 
     def pull_events(self) -> List[DomainEvent]:
@@ -56,3 +80,12 @@ class AggregateRoot(BaseModel, Generic[AggregateId]):
 
     def push_event(self, event: DomainEvent[AggregateId]) -> None:
         self._events.append(event)
+
+    def refresh_updated_on(self) -> None:
+        self.updated_on = datetime.now()
+
+    class Config:
+        json_encoders = {
+            ULID: lambda v: str(v),
+            datetime: lambda v: v.timestamp(),
+        }

@@ -1,3 +1,5 @@
+from decimal import Decimal
+import json
 from typing import Any, Dict, List, Optional
 
 import boto3
@@ -15,13 +17,16 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
         self._table = resource.Table(table_name)
 
     def save(self, parkinglot: ParkinglotAggregate) -> None:
-        data = parkinglot.dict(exclude={"id", "owner_id", "version"})
+        item = json.loads(
+            parkinglot.json(exclude={"id", "owner_id", "version"}),
+            parse_float=Decimal,
+        )
         self._table.put_item(
             Item={
                 "pk": str(parkinglot.owner_id),
                 "sk": f"PARKINGLOT::{parkinglot.id}",
                 "version": parkinglot.version + 1,
-                **data,
+                **item,
             },
             ConditionExpression=(
                 Attr("version").not_exists() | Attr("version").eq(parkinglot.version)
