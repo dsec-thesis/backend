@@ -1,4 +1,7 @@
+from datetime import datetime
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 from backend.contexts.booking.domain import (
     BookingAggregate,
@@ -7,16 +10,27 @@ from backend.contexts.booking.domain import (
 from backend.contexts.shared.domain import BookingId, DriverId, EventBus, ParkinglotId
 
 
-def create_booking(
-    booking_id: BookingId,
-    parkinglot_id: ParkinglotId,
-    driver_id: DriverId,
-    repo: BookingRepository,
-    bus: EventBus,
-) -> None:
-    booking = BookingAggregate.create(booking_id, driver_id, parkinglot_id)
-    repo.save(booking)
-    bus.publish(booking.pull_events())
+class CreateBookingCommand(BaseModel):
+    booking_id: BookingId
+    parkinglot_id: ParkinglotId
+    description: str
+    duration: Optional[datetime] = None
+
+    def handle(
+        self,
+        driver_id: DriverId,
+        repo: BookingRepository,
+        bus: EventBus,
+    ):
+        booking = BookingAggregate.create(
+            self.booking_id,
+            driver_id,
+            self.parkinglot_id,
+            self.duration,
+            self.description,
+        )
+        repo.save(booking)
+        bus.publish(booking.pull_events())
 
 
 def list_bookings(

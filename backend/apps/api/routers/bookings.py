@@ -10,20 +10,19 @@ from backend.apps.api.dependencies import (
 from backend.contexts.booking import application as bookings
 from backend.contexts.booking.application import BookingRepository
 from backend.contexts.booking.domain import BookingAggregate
-from backend.contexts.shared.domain import BookingId, DriverId, EventBus, ParkinglotId
+from backend.contexts.shared.domain import BookingId, DriverId, EventBus
 
 router = APIRouter()
 
 
 @router.put("")
 def create_booking(
-    booking_id: BookingId,
-    parkinglot_id: ParkinglotId,
+    command: bookings.CreateBookingCommand,
     driver_id: Annotated[DriverId, Depends(get_user_id)],
     repo: Annotated[BookingRepository, Depends(create_booking_repository)],
     bus: Annotated[EventBus, Depends(create_eventbus)],
 ) -> None:
-    return bookings.create_booking(booking_id, parkinglot_id, driver_id, repo, bus)
+    return command.handle(driver_id, repo, bus)
 
 
 @router.get("")

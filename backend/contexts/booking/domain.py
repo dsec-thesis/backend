@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Protocol
@@ -28,11 +29,14 @@ class BookingCanceled(DomainEvent[BookingId]):
 
 class BookingCreated(DomainEvent[BookingId]):
     parkinglot_id: ParkinglotId
+    duration: Optional[datetime]
 
 
 class BookingAggregate(AggregateRoot[BookingId]):
     driver_id: DriverId
     parkinglot_id: ParkinglotId
+    description: str
+    duration: Optional[datetime]
     state: BookingState
     price: Optional[Decimal]
 
@@ -42,13 +46,17 @@ class BookingAggregate(AggregateRoot[BookingId]):
         id: BookingId,
         driver_id: DriverId,
         parkinglot_id: ParkinglotId,
+        duration: Optional[datetime],
+        description: str,
     ) -> "BookingAggregate":
         booking = cls(
             id=id,
-            driver_id=driver_id,
-            parkinglot_id=parkinglot_id,
             created_on=id.datetime,
             updated_on=id.datetime,
+            driver_id=driver_id,
+            parkinglot_id=parkinglot_id,
+            description=description,
+            duration=duration,
             state=BookingState.CREATED,
             price=None,
         )
@@ -56,6 +64,7 @@ class BookingAggregate(AggregateRoot[BookingId]):
             BookingCreated(
                 aggregate_id=booking.id,
                 parkinglot_id=booking.parkinglot_id,
+                duration=booking.duration,
             )
         )
         return booking
