@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import timedelta
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ class CreateBookingCommand(BaseModel):
     booking_id: BookingId
     parkinglot_id: ParkinglotId
     description: str
-    duration: Optional[datetime] = None
+    duration: Optional[timedelta] = None
 
     def handle(
         self,
