@@ -53,6 +53,7 @@ class Container(containers.DeclarativeContainer):
     dynamo_parkinglot_search_repository = providers.Singleton(
         DynamodbParkinglotSearchRepository,
         table_name=config.dynamo_table,
+        index_name=config.h3_cell_index,
     )
     parkinglot_search_repository = providers.Selector(
         config.env,
