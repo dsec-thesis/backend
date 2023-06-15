@@ -82,7 +82,7 @@ class ChangeParkinglotPriceCommand(BaseModel):
 
 class AccommodateBookingCommand(BaseModel):
     booking_id: BookingId
-    booking_duration: timedelta
+    booking_duration: Optional[timedelta]
     parkinglot_id: ParkinglotId
 
     def handle(

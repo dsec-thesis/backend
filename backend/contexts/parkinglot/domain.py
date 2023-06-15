@@ -37,12 +37,13 @@ class ParkingSpace(BaseModel):
         self,
         driver_id: DriverId,
         booking_id: BookingId,
-        booking_duration: timedelta,
+        booking_duration: Optional[timedelta],
     ) -> None:
         self.booked_by = driver_id
         self.booking_id = booking_id
         self.booked_from = datetime.now()
-        self.booked_util = self.booked_from + booking_duration
+        if booking_duration:
+            self.booked_util = self.booked_from + booking_duration
 
 
 class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
@@ -98,7 +99,7 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         self,
         driver_id: DriverId,
         booking_id: BookingId,
-        booking_duration: timedelta,
+        booking_duration: Optional[timedelta] = None,
     ) -> Optional[Price]:
         if not self.free_spaces:
             return None
@@ -107,6 +108,8 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         free_space.book(driver_id, booking_id, booking_duration)
         self.free_spaces -= 1
         self.refresh_updated_on()
+        if not booking_duration:
+            return None
         return self.price * Decimal(booking_duration.total_seconds())
 
     def register_spaces(self, space_ids: List[ParkingSpaceId]) -> None:

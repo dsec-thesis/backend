@@ -71,6 +71,9 @@ class DynamodbBookingRepository(BookingRepository):
             "driver_id": item["pk"],
             **item,
         }
+        if duration := item.get("duration"):
+            item["duration"] = int(duration)
+
         return BookingAggregate.parse_obj(item)
 
 
