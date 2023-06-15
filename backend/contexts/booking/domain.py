@@ -29,6 +29,7 @@ class BookingCanceled(DomainEvent[BookingId]):
 
 class BookingCreated(DomainEvent[BookingId]):
     parkinglot_id: ParkinglotId
+    driver_id: DriverId
     duration: Optional[timedelta]
 
 
@@ -64,6 +65,7 @@ class BookingAggregate(AggregateRoot[BookingId]):
             BookingCreated(
                 aggregate_id=booking.id,
                 parkinglot_id=booking.parkinglot_id,
+                driver_id=driver_id,
                 duration=booking.duration,
             )
         )
