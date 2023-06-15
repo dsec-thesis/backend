@@ -2,19 +2,20 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.apps.api.dependencies import create_parkinglot_search_repository
+from backend.apps.container import Container
 from backend.contexts.searcher import application as searcher
 from backend.contexts.searcher.domain import ParkinglotSearchRepository
+from dependency_injector.wiring import Provide, inject
 
 router = APIRouter()
 
 
 @router.get("")
+@inject
 def search(
-    repo: Annotated[
-        ParkinglotSearchRepository,
-        Depends(create_parkinglot_search_repository),
-    ],
+    repo: ParkinglotSearchRepository = Depends(
+        Provide[Container.parkinglot_search_repository]
+    ),
     lat: Annotated[Optional[float], Query(ge=-90, le=90)] = None,
     lng: Annotated[Optional[float], Query(gt=-180, le=180)] = None,
     central_cell: Annotated[Optional[str], Query()] = None,
