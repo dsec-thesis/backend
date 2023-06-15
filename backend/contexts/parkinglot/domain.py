@@ -100,17 +100,23 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         driver_id: DriverId,
         booking_id: BookingId,
         booking_duration: Optional[timedelta] = None,
-    ) -> Optional[Price]:
+    ) -> None:
         if not self.free_spaces:
+            self.push_event(BookingRefused(aggregate_id=self.id, booking_id=booking_id))
             return None
         if not (free_space := self.find_free_space()):
+            self.push_event(BookingRefused(aggregate_id=self.id, booking_id=booking_id))
             return None
         free_space.book(driver_id, booking_id, booking_duration)
         self.free_spaces -= 1
+        self.push_event(
+            BookingAccommodated(
+                aggregate_id=self.id,
+                booking_id=booking_id,
+                price=self.price,
+            )
+        )
         self.refresh_updated_on()
-        if not booking_duration:
-            return None
-        return self.price * Decimal(booking_duration.total_seconds())
 
     def register_spaces(self, space_ids: List[ParkingSpaceId]) -> None:
         spaces = [ParkingSpace(id=space_id) for space_id in space_ids]
@@ -130,7 +136,12 @@ class ParkinglotCreated(DomainEvent[ParkinglotId]):
 
 
 class BookingAccommodated(DomainEvent[ParkinglotId]):
+    booking_id: BookingId
     price: Price
+
+
+class BookingRefused(DomainEvent[ParkinglotId]):
+    booking_id: BookingId
 
 
 class ParkingSpaceCreated(DomainEvent[ParkinglotId]):
