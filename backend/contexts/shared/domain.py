@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Generic, List, Protocol, TypeVar
+from typing import List, Protocol, TypeVar
 
 import ulid
 from pydantic import BaseModel, Field, PrivateAttr

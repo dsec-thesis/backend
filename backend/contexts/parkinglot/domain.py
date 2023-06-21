@@ -125,6 +125,7 @@ class ParkinglotAggregate(AggregateRoot):
 
     def register_spaces(self, space_ids: List[ParkingSpaceId]) -> None:
         spaces = [ParkingSpace(id=space_id) for space_id in space_ids]
+        self.free_spaces += len(spaces)
         self.spaces.extend(spaces)
         for space in spaces:
             self.push_event(

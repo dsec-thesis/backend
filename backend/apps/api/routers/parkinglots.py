@@ -7,7 +7,11 @@ from backend.apps.api.dependencies import get_user_id
 from backend.apps.container import Container
 from backend.contexts.parkinglot import application as parkinglot
 from backend.contexts.parkinglot.domain import ParkinglotAggregate, ParkinglotRepository
-from backend.contexts.shared.domain import EventBus, OwnerId, ParkinglotId
+from backend.contexts.shared.domain import (
+    EventBus,
+    OwnerId,
+    ParkinglotId,
+)
 
 router = APIRouter()
 
@@ -46,6 +50,17 @@ def get_parkinglot(
 @inject
 def change_price(
     command: parkinglot.ChangeParkinglotPriceCommand,
+    owner_id: OwnerId = Depends(get_user_id),
+    repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
+    bus: EventBus = Depends(Provide[Container.eventbus]),
+) -> None:
+    return command.handle(owner_id, repo, bus)
+
+
+@router.put("/{parkinglot_id}/spaces")
+@inject
+def register_spaces(
+    command: parkinglot.RegisterSpacesCommand,
     owner_id: OwnerId = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
