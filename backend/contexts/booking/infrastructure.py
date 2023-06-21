@@ -1,6 +1,6 @@
-from decimal import Decimal
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
@@ -13,7 +13,8 @@ from backend.contexts.shared.domain import BookingId, DriverId
 
 
 class DynamodbBookingRepository(BookingRepository):
-    def __init__(self, table_name: str) -> None:
+    def __init__(self, table_name: str, inverted_index: str) -> None:
+        self._inverted_index = inverted_index
         resource = boto3.resource("dynamodb")
         self._table = resource.Table(table_name)
 
@@ -37,13 +38,17 @@ class DynamodbBookingRepository(BookingRepository):
 
     def get(
         self,
-        driver_id: DriverId,
         booking_id: BookingId,
+        driver_id: Optional[DriverId] = None,
     ) -> Optional[BookingAggregate]:
+        driver_id = driver_id or self._resolve_driver(booking_id)
+        if not driver_id:
+            return None
+
         item = self._table.get_item(
             Key={
                 "pk": str(driver_id),
-                "sk": f"BOOKING::{booking_id}",
+                "sk": self._format_sk(booking_id),
             }
         )["Item"]
 
@@ -76,20 +81,32 @@ class DynamodbBookingRepository(BookingRepository):
 
         return BookingAggregate.parse_obj(item)
 
+    def _format_sk(self, booking_id: BookingId) -> str:
+        return f"BOOKING::{booking_id}"
+
+    def _resolve_driver(self, booking_id: BookingId) -> Optional[DriverId]:
+        items = self._table.query(
+            IndexName=self._inverted_index,
+            KeyConditionExpression=Key("sk").eq(self._format_sk(booking_id)),
+        )["Items"]
+        if not items:
+            return None
+        return BookingId.from_str(items[0]["pk"])
+
 
 class RamBookingRepository(BookingRepository):
     def __init__(self) -> None:
-        self.bookings: Dict[Tuple[DriverId, BookingId], BookingAggregate] = {}
+        self.bookings: Dict[BookingId, BookingAggregate] = {}
 
     def save(self, booking: BookingAggregate) -> None:
-        self.bookings[(booking.driver_id, booking.id)] = booking
+        self.bookings[booking.id] = booking
 
     def get(
         self,
-        driver_id: DriverId,
         booking_id: BookingId,
+        driver_id: Optional[DriverId] = None,
     ) -> Optional[BookingAggregate]:
-        return self.bookings.get((driver_id, booking_id))
+        return self.bookings.get(booking_id)
 
     def list(
         self,

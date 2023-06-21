@@ -15,7 +15,6 @@ from backend.contexts.shared.domain import (
 class BookingState(Enum):
     CREATED = "CREATED"
     ACCOMMODATED = "ACCOMMODATED"
-    REFUSED = "REFUSED"
     CANCELED = "CANCELED"
 
 
@@ -106,8 +105,8 @@ class BookingRepository(Protocol):
 
     def get(
         self,
-        driver_id: DriverId,
         booking_id: BookingId,
+        driver_id: Optional[DriverId] = None,
     ) -> Optional[BookingAggregate]:
         ...
 

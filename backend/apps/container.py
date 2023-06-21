@@ -27,6 +27,7 @@ class Container(containers.DeclarativeContainer):
     dynamo_booking_repository = providers.Singleton(
         DynamodbBookingRepository,
         table_name=config.dynamo_table,
+        inverted_index=config.inverted_index,
     )
     booking_repository = providers.Selector(
         config.env,
