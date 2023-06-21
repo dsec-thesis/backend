@@ -19,6 +19,8 @@ class SnsEventBus(EventBus):
         self._client = boto3.client("sns")
 
     def publish(self, events: List[DomainEvent]) -> None:
+        if not events:
+            return
         self._client.publish_batch(
             TopicArn=self._topic_arn,
             PublishBatchRequestEntries=[
