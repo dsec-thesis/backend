@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -74,3 +75,16 @@ def get_booking(
     repo: BookingRepository,
 ) -> Optional[BookingAggregate]:
     return repo.get(booking_id, driver_id)
+
+
+def assign_price(
+    booking_id: BookingId,
+    price: Decimal,
+    repo: BookingRepository,
+    bus: EventBus,
+) -> None:
+    if not (booking := repo.get(booking_id)):
+        return
+    booking.assign_price(price)
+    repo.save(booking)
+    bus.publish(booking.pull_events())
