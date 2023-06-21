@@ -46,7 +46,8 @@ class ParkingSpace(BaseModel):
             self.booked_util = self.booked_from + booking_duration
 
 
-class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
+class ParkinglotAggregate(AggregateRoot):
+    id: ParkinglotId
     owner_id: OwnerId
     name: str
     street: str
@@ -79,7 +80,7 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         )
         parkinglot.push_event(
             ParkinglotCreated(
-                aggregate_id=parkinglot.id,
+                aggregate_id=str(parkinglot.id),
                 owner_id=parkinglot.owner_id,
                 name=parkinglot.name,
                 street=parkinglot.street,
@@ -102,16 +103,20 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         booking_duration: Optional[timedelta] = None,
     ) -> None:
         if not self.free_spaces:
-            self.push_event(BookingRefused(aggregate_id=self.id, booking_id=booking_id))
+            self.push_event(
+                BookingRefused(aggregate_id=str(self.id), booking_id=booking_id)
+            )
             return None
         if not (free_space := self.find_free_space()):
-            self.push_event(BookingRefused(aggregate_id=self.id, booking_id=booking_id))
+            self.push_event(
+                BookingRefused(aggregate_id=str(self.id), booking_id=booking_id)
+            )
             return None
         free_space.book(driver_id, booking_id, booking_duration)
         self.free_spaces -= 1
         self.push_event(
             BookingAccommodated(
-                aggregate_id=self.id,
+                aggregate_id=str(self.id),
                 booking_id=booking_id,
                 price=self.price,
             )
@@ -123,28 +128,28 @@ class ParkinglotAggregate(AggregateRoot[ParkinglotId]):
         self.spaces.extend(spaces)
         for space in spaces:
             self.push_event(
-                ParkingSpaceCreated(aggregate_id=self.id, space_id=space.id)
+                ParkingSpaceCreated(aggregate_id=str(self.id), space_id=space.id)
             )
         self.refresh_updated_on()
 
 
-class ParkinglotCreated(DomainEvent[ParkinglotId]):
+class ParkinglotCreated(DomainEvent):
     owner_id: OwnerId
     name: str
     street: str
     coordinates: Coordinates
 
 
-class BookingAccommodated(DomainEvent[ParkinglotId]):
+class BookingAccommodated(DomainEvent):
     booking_id: BookingId
     price: Price
 
 
-class BookingRefused(DomainEvent[ParkinglotId]):
+class BookingRefused(DomainEvent):
     booking_id: BookingId
 
 
-class ParkingSpaceCreated(DomainEvent[ParkinglotId]):
+class ParkingSpaceCreated(DomainEvent):
     space_id: ParkingSpaceId
 
 

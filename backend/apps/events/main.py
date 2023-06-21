@@ -1,19 +1,23 @@
-from typing import Dict, List, Protocol, Tuple, Type
+from typing import Any, Dict, List, Protocol, Tuple, Type, TypeVar
 
 from aws_lambda_typing.context import Context
 from aws_lambda_typing.events import SNSEvent
+from backend.apps.container import Container
+from backend.apps.events.parkinglot import handle_booking_created
 
 from backend.contexts.booking.domain import BookingCreated
 from backend.contexts.shared.domain import DomainEvent
 
 
 class EventHandler(Protocol):
-    def __call__(self, event: DomainEvent) -> None:
+    def __call__(self, event: Any) -> None:
         ...
 
 
+container = Container()
+
 register: Dict[str, Tuple[Type[DomainEvent], List[EventHandler]]] = {
-    "BookingCreated": (BookingCreated, [])
+    "BookingCreated": (BookingCreated, [handle_booking_created])
 }
 
 

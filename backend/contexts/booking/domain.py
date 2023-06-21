@@ -19,21 +19,22 @@ class BookingState(Enum):
     CANCELED = "CANCELED"
 
 
-class AccommodatedBookingCanceled(DomainEvent[BookingId]):
+class AccommodatedBookingCanceled(DomainEvent):
     parkinglot_id: ParkinglotId
 
 
-class BookingCanceled(DomainEvent[BookingId]):
+class BookingCanceled(DomainEvent):
     parkinglot_id: ParkinglotId
 
 
-class BookingCreated(DomainEvent[BookingId]):
+class BookingCreated(DomainEvent):
     parkinglot_id: ParkinglotId
     driver_id: DriverId
     duration: Optional[timedelta]
 
 
-class BookingAggregate(AggregateRoot[BookingId]):
+class BookingAggregate(AggregateRoot):
+    id: BookingId
     driver_id: DriverId
     parkinglot_id: ParkinglotId
     description: str
@@ -63,7 +64,7 @@ class BookingAggregate(AggregateRoot[BookingId]):
         )
         booking.push_event(
             BookingCreated(
-                aggregate_id=booking.id,
+                aggregate_id=str(booking.id),
                 parkinglot_id=booking.parkinglot_id,
                 driver_id=driver_id,
                 duration=booking.duration,
@@ -77,13 +78,13 @@ class BookingAggregate(AggregateRoot[BookingId]):
         if self.state == BookingState.ACCOMMODATED:
             self.push_event(
                 AccommodatedBookingCanceled(
-                    aggregate_id=self.id,
+                    aggregate_id=str(self.id),
                     parkinglot_id=self.parkinglot_id,
                 )
             )
         self.push_event(
             BookingCanceled(
-                aggregate_id=self.id,
+                aggregate_id=str(self.id),
                 parkinglot_id=self.parkinglot_id,
             )
         )

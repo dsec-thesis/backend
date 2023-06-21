@@ -13,6 +13,7 @@ custom:
     ]
   dynamoTableName: ${self:service}-${sls:stage}
   h3CellIndexName: H3CellIndex
+  ivertedIndexName: InvertedIndex
   dynamodbTableArn: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-${sls:stage}
   dynamodbAppResourcesArn: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-${sls:stage}/*
   snsTopicArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${sls:stage}
@@ -45,6 +46,7 @@ functions:
     environment:
       DYNAMO_TABLE: ${self:custom.dynamoTableName}
       H3_CELL_INDEX: ${self:custom.h3CellIndexName}
+      INVERTED_INDEX: ${self:custom.ivertedIndexName}
       SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
       ENV: aws_lambda_mangum
     iamRoleStatements:
@@ -70,8 +72,22 @@ functions:
     environment:
       DYNAMO_TABLE: ${self:custom.dynamoTableName}
       H3_CELL_INDEX: ${self:custom.h3CellIndexName}
+      INVERTED_INDEX: ${self:custom.ivertedIndexName}
       SNS_TOPIC_ARN: ${self:custom.snsTopicArn}
       ENV: aws_lambda_mangum
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:Query
+        Resource:
+          - ${self:custom.dynamodbTableArn}
+          - ${self:custom.dynamodbAppResourcesArn}
+      - Effect: Allow
+        Action:
+          - sns:Publish
+        Resource: ${self:custom.snsTopicArn}
 
 resources:
   Resources:
@@ -203,3 +219,11 @@ resources:
                 - name
                 - street
                 - coordinates
+          - IndexName: ${self:custom.ivertedIndexName}
+            KeySchema:
+              - AttributeName: sk
+                KeyType: HASH
+              - AttributeName: pk
+                KeyType: RANGE
+            Projection:
+              ProjectionType: KEYS_ONLY

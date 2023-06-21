@@ -17,7 +17,7 @@ from backend.contexts.shared.infrastructure import RamEventBus, SnsEventBus
 
 
 class Container(containers.DeclarativeContainer):
-    wiring_config = containers.WiringConfiguration(packages=[".api"])
+    wiring_config = containers.WiringConfiguration(packages=[".api", ".events"])
 
     config = providers.Configuration(pydantic_settings=[Settings()])
 
@@ -40,6 +40,7 @@ class Container(containers.DeclarativeContainer):
     dynamo_parkinglot_repository = providers.Singleton(
         DynamodbParkinglotRepository,
         table_name=config.dynamo_table,
+        inverted_index=config.inverted_index,
     )
     parkinglot_repository = providers.Selector(
         config.env,

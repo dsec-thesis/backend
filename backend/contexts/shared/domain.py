@@ -47,9 +47,9 @@ class ParkingSpaceId(uuid.UUID):
     ...
 
 
-class DomainEvent(BaseModel, Generic[AggregateId]):
+class DomainEvent(BaseModel):
     id: ULID = Field(default_factory=ULID)
-    aggregate_id: AggregateId
+    aggregate_id: str
 
     @property
     def event_name(self) -> str:
@@ -66,19 +66,18 @@ class EventBus(Protocol):
         ...
 
 
-class AggregateRoot(BaseModel, Generic[AggregateId]):
-    id: AggregateId
+class AggregateRoot(BaseModel):
     version: int = 0
     created_on: datetime
     updated_on: datetime
-    _events: List[DomainEvent[AggregateId]] = PrivateAttr(default_factory=list)
+    _events: List[DomainEvent] = PrivateAttr(default_factory=list)
 
     def pull_events(self) -> List[DomainEvent]:
         events = [e for e in self._events]
         self._events = []
         return events
 
-    def push_event(self, event: DomainEvent[AggregateId]) -> None:
+    def push_event(self, event: DomainEvent) -> None:
         self._events.append(event)
 
     def refresh_updated_on(self) -> None:
