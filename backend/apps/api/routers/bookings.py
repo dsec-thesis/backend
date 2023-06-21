@@ -50,7 +50,7 @@ def get_booking(
     return booking
 
 
-@router.put("/{booking_id}/cancel")
+@router.delete("/{booking_id}")
 @inject
 def cancel_booking(
     booking_id: BookingId,
