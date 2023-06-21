@@ -6,8 +6,17 @@ from aws_lambda_typing.events import SNSEvent
 from backend.apps.container import Container
 from backend.apps.events.booking import handle_booking_refused
 from backend.apps.events.parkinglot import handle_booking_created
-from backend.contexts.booking.domain import BookingCreated
-from backend.contexts.parkinglot.domain import BookingRefused
+from backend.contexts.booking.domain import (
+    AccommodatedBookingCanceled,
+    BookingCanceled,
+    BookingCreated,
+)
+from backend.contexts.parkinglot.domain import (
+    BookingAccommodated,
+    BookingRefused,
+    ParkinglotCreated,
+    ParkingSpaceCreated,
+)
 from backend.contexts.shared.domain import DomainEvent
 
 
@@ -18,11 +27,20 @@ class EventHandler(Protocol):
         ...
 
 
+def null_handler(event: Any) -> None:
+    ...
+
+
 container = Container()
 
 register: Dict[str, Tuple[Type[DomainEvent], List[EventHandler]]] = {
     "BookingCreated": (BookingCreated, [handle_booking_created]),
+    "BookingCanceled": (BookingCanceled, [null_handler]),
+    "AccommodatedBookingCanceled": (AccommodatedBookingCanceled, [null_handler]),
     "BookingRefused": (BookingRefused, [handle_booking_refused]),
+    "ParkinglotCreated": (ParkinglotCreated, [null_handler]),
+    "BookingAccommodated": (BookingAccommodated, [null_handler]),
+    "ParkingSpaceCreated": (ParkingSpaceCreated, [null_handler]),
 }
 
 
