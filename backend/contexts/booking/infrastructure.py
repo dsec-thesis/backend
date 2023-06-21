@@ -91,7 +91,7 @@ class DynamodbBookingRepository(BookingRepository):
         )["Items"]
         if not items:
             return None
-        return BookingId.from_str(items[0]["pk"])
+        return DriverId(str(items[0]["pk"]))
 
 
 class RamBookingRepository(BookingRepository):
