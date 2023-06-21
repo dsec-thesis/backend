@@ -1,7 +1,8 @@
-from typing import List
+from decimal import Decimal
+from typing import Annotated, List
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Body, Depends, status
 
 from backend.apps.api.dependencies import get_user_id
 from backend.apps.container import Container
@@ -10,6 +11,7 @@ from backend.contexts.parkinglot.domain import ParkinglotAggregate, ParkinglotRe
 from backend.contexts.shared.domain import (
     EventBus,
     OwnerId,
+    ParkingSpaceId,
     ParkinglotId,
 )
 
@@ -49,20 +51,34 @@ def get_parkinglot(
 @router.put("/{parkinglot_id}/price")
 @inject
 def change_price(
-    command: parkinglot.ChangeParkinglotPriceCommand,
+    parkinglot_id: ParkinglotId,
+    price: Annotated[Decimal, Body(embed=True)],
     owner_id: OwnerId = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ) -> None:
-    return command.handle(owner_id, repo, bus)
+    return parkinglot.change_parkinglot_price(
+        parkinglot_id=parkinglot_id,
+        price=price,
+        owner_id=owner_id,
+        repo=repo,
+        bus=bus,
+    )
 
 
 @router.put("/{parkinglot_id}/spaces")
 @inject
 def register_spaces(
-    command: parkinglot.RegisterSpacesCommand,
+    parkinglot_id: ParkinglotId,
+    space_ids: Annotated[List[ParkingSpaceId], Body(embed=True)],
     owner_id: OwnerId = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ) -> None:
-    return command.handle(owner_id, repo, bus)
+    return parkinglot.register_spaces_command(
+        parkinglot_id=parkinglot_id,
+        space_ids=space_ids,
+        owner_id=owner_id,
+        repo=repo,
+        bus=bus,
+    )

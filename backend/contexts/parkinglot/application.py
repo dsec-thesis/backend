@@ -44,42 +44,6 @@ class CreateParkinglotCommand(BaseModel):
         bus.publish(parkinglot.pull_events())
 
 
-class RegisterSpacesCommand(BaseModel):
-    parkinglot_id: ParkinglotId
-    space_ids: List[ParkingSpaceId]
-
-    def handle(
-        self,
-        owner_id: OwnerId,
-        repo: ParkinglotRepository,
-        bus: EventBus,
-    ) -> None:
-        if not (parkinglot := repo.get(self.parkinglot_id, owner_id)):
-            return None
-        parkinglot.register_spaces(self.space_ids)
-        repo.save(parkinglot)
-        bus.publish(parkinglot.pull_events())
-        return None
-
-
-class ChangeParkinglotPriceCommand(BaseModel):
-    parkinglot_id: ParkinglotId
-    price: Price
-
-    def handle(
-        self,
-        owner_id: OwnerId,
-        repo: ParkinglotRepository,
-        bus: EventBus,
-    ) -> None:
-        if not (parkinglot := repo.get(self.parkinglot_id, owner_id)):
-            return None
-        parkinglot.change_price(self.price)
-        repo.save(parkinglot)
-        bus.publish(parkinglot.pull_events())
-        return None
-
-
 class AccommodateBookingCommand(BaseModel):
     booking_id: BookingId
     booking_duration: Optional[timedelta]
@@ -101,6 +65,36 @@ class AccommodateBookingCommand(BaseModel):
         repo.save(parkinglot)
         bus.publish(parkinglot.pull_events())
         return None
+
+
+def register_spaces_command(
+    parkinglot_id: ParkinglotId,
+    space_ids: List[ParkingSpaceId],
+    owner_id: OwnerId,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+):
+    if not (parkinglot := repo.get(parkinglot_id, owner_id)):
+        return None
+    parkinglot.register_spaces(space_ids)
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
+
+
+def change_parkinglot_price(
+    parkinglot_id: ParkinglotId,
+    price: Price,
+    owner_id: OwnerId,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+) -> None:
+    if not (parkinglot := repo.get(parkinglot_id, owner_id)):
+        return None
+    parkinglot.change_price(price)
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
 
 
 def list_parkinglots(
@@ -129,3 +123,4 @@ def release_space(
     parkinglot.release_space(booking_id)
     repo.save(parkinglot)
     bus.publish(parkinglot.pull_events())
+    return None
