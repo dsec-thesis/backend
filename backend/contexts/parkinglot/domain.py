@@ -45,6 +45,12 @@ class ParkingSpace(BaseModel):
         if booking_duration:
             self.booked_util = self.booked_from + booking_duration
 
+    def release(self) -> None:
+        self.booked_by = None
+        self.booked_from = None
+        self.booked_util = None
+        self.booking_id = None
+
 
 class ParkinglotAggregate(AggregateRoot):
     id: ParkinglotId
@@ -131,6 +137,14 @@ class ParkinglotAggregate(AggregateRoot):
             self.push_event(
                 ParkingSpaceCreated(aggregate_id=str(self.id), space_id=space.id)
             )
+        self.refresh_updated_on()
+
+    def release_space(self, booking_id: BookingId) -> None:
+        space = next((s for s in self.spaces if s.booking_id == booking_id), None)
+        if not space:
+            return
+        space.release()
+        self.free_spaces += 1
         self.refresh_updated_on()
 
 

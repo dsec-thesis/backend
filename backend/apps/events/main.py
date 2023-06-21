@@ -8,7 +8,10 @@ from backend.apps.events.booking import (
     handle_booking_accommodated,
     handle_booking_refused,
 )
-from backend.apps.events.parkinglot import handle_booking_created
+from backend.apps.events.parkinglot import (
+    handle_accommodated_booking_canceled,
+    handle_booking_created,
+)
 from backend.contexts.booking.domain import (
     AccommodatedBookingCanceled,
     BookingCanceled,
@@ -37,13 +40,46 @@ def null_handler(event: Any) -> None:
 container = Container()
 
 register: Dict[str, Tuple[Type[DomainEvent], List[EventHandler]]] = {
-    "BookingCreated": (BookingCreated, [handle_booking_created]),
-    "BookingCanceled": (BookingCanceled, [null_handler]),
-    "AccommodatedBookingCanceled": (AccommodatedBookingCanceled, [null_handler]),
-    "BookingRefused": (BookingRefused, [handle_booking_refused]),
-    "ParkinglotCreated": (ParkinglotCreated, [null_handler]),
-    "BookingAccommodated": (BookingAccommodated, [handle_booking_accommodated]),
-    "ParkingSpaceCreated": (ParkingSpaceCreated, [null_handler]),
+    "BookingCreated": (
+        BookingCreated,
+        [
+            handle_booking_created,
+        ],
+    ),
+    "BookingCanceled": (
+        BookingCanceled,
+        [
+            null_handler,
+        ],
+    ),
+    "AccommodatedBookingCanceled": (
+        AccommodatedBookingCanceled,
+        [handle_accommodated_booking_canceled],
+    ),
+    "BookingRefused": (
+        BookingRefused,
+        [
+            handle_booking_refused,
+        ],
+    ),
+    "ParkinglotCreated": (
+        ParkinglotCreated,
+        [
+            null_handler,
+        ],
+    ),
+    "BookingAccommodated": (
+        BookingAccommodated,
+        [
+            handle_booking_accommodated,
+        ],
+    ),
+    "ParkingSpaceCreated": (
+        ParkingSpaceCreated,
+        [
+            null_handler,
+        ],
+    ),
 }
 
 

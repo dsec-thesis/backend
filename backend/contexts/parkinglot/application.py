@@ -116,3 +116,16 @@ def get_parkinglot(
     repo: ParkinglotRepository,
 ) -> Optional[ParkinglotAggregate]:
     return repo.get(parkinglot_id, owner_id)
+
+
+def release_space(
+    parkinglot_id: ParkinglotId,
+    booking_id: BookingId,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+) -> None:
+    if not (parkinglot := repo.get(parkinglot_id)):
+        return None
+    parkinglot.release_space(booking_id)
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
