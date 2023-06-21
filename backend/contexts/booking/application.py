@@ -48,6 +48,19 @@ def cancel_booking_by_parkinglot(
     bus.publish(booking.pull_events())
 
 
+def cancel_booking_by_driver(
+    booking_id: BookingId,
+    driver_id: DriverId,
+    repo: BookingRepository,
+    bus: EventBus,
+) -> None:
+    if not (booking := repo.get(booking_id, driver_id)):
+        return
+    booking.cancel()
+    repo.save(booking)
+    bus.publish(booking.pull_events())
+
+
 def list_bookings(
     driver_id: DriverId,
     repo: BookingRepository,

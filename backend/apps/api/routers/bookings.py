@@ -48,3 +48,19 @@ def get_booking(
             detail="Booking not found",
         )
     return booking
+
+
+@router.put("/{booking_id}/cancel")
+@inject
+def cancel_booking(
+    booking_id: BookingId,
+    driver_id: DriverId = Depends(get_user_id),
+    repo: BookingRepository = Depends(Provide[Container.booking_repository]),
+    bus: EventBus = Depends(Provide[Container.eventbus]),
+) -> None:
+    return bookings.cancel_booking_by_driver(
+        booking_id=booking_id,
+        driver_id=driver_id,
+        repo=repo,
+        bus=bus,
+    )
