@@ -19,29 +19,28 @@ from backend.contexts.shared.domain import (
 )
 
 
-class CreateParkinglotCommand(BaseModel):
-    parkinglot_id: ParkinglotId
-    name: str
-    street: str
-    coordinates: Coordinates
-    price: Price
-
-    def handle(
-        self,
-        owner_id: OwnerId,
-        repo: ParkinglotRepository,
-        bus: EventBus,
-    ) -> None:
-        parkinglot = ParkinglotAggregate.create(
-            parkinglot_id=self.parkinglot_id,
-            owner_id=owner_id,
-            name=self.name,
-            street=self.street,
-            coordinates=self.coordinates,
-            price=self.price,
-        )
-        repo.save(parkinglot)
-        bus.publish(parkinglot.pull_events())
+def create_parkinglot(
+    parkinglot_id: ParkinglotId,
+    name: str,
+    street: str,
+    coordinates: Coordinates,
+    price: Price,
+    owner_id: OwnerId,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+) -> None:
+    if repo.get(parkinglot_id, owner_id):
+        return
+    parkinglot = ParkinglotAggregate.create(
+        parkinglot_id=parkinglot_id,
+        owner_id=owner_id,
+        name=name,
+        street=street,
+        coordinates=coordinates,
+        price=price,
+    )
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
 
 
 class AccommodateBookingCommand(BaseModel):
