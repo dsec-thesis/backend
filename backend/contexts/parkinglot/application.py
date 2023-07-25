@@ -1,8 +1,6 @@
 from datetime import timedelta
 from typing import List, Optional
 
-from pydantic import BaseModel
-
 from backend.contexts.parkinglot.domain import (
     Coordinates,
     ParkinglotAggregate,
@@ -30,7 +28,7 @@ def create_parkinglot(
     bus: EventBus,
 ) -> None:
     if repo.get(parkinglot_id, owner_id):
-        return
+        return None
     parkinglot = ParkinglotAggregate.create(
         parkinglot_id=parkinglot_id,
         owner_id=owner_id,
@@ -41,29 +39,27 @@ def create_parkinglot(
     )
     repo.save(parkinglot)
     bus.publish(parkinglot.pull_events())
+    return None
 
 
-class AccommodateBookingCommand(BaseModel):
-    booking_id: BookingId
-    booking_duration: Optional[timedelta]
-    parkinglot_id: ParkinglotId
-
-    def handle(
-        self,
-        driver_id: DriverId,
-        repo: ParkinglotRepository,
-        bus: EventBus,
-    ) -> None:
-        if not (parkinglot := repo.get(self.parkinglot_id)):
-            return None
-        parkinglot.accommodate_booking(
-            driver_id,
-            self.booking_id,
-            self.booking_duration,
-        )
-        repo.save(parkinglot)
-        bus.publish(parkinglot.pull_events())
+def accomodate_booking(
+    booking_id: BookingId,
+    parkinglot_id: ParkinglotId,
+    driver_id: DriverId,
+    booking_duration: Optional[timedelta],
+    repo: ParkinglotRepository,
+    bus: EventBus,
+) -> None:
+    if not (parkinglot := repo.get(parkinglot_id)):
         return None
+    parkinglot.accommodate_booking(
+        driver_id=driver_id,
+        booking_id=booking_id,
+        booking_duration=booking_duration,
+    )
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
 
 
 def register_spaces_command(
