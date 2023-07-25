@@ -32,5 +32,5 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.taskipy.tasks]
-serve = {cmd = "uvicorn --app-dir backend --reload api.main:app", help = "run server locally"}
+serve = {cmd = "uvicorn --reload --host localhost --app-dir backend --reload apps.api.main:app", help = "run server locally"}
 deploy_dev = "npx serverless deploy --stage dev"
