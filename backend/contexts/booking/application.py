@@ -2,8 +2,6 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel
-
 from backend.contexts.booking.domain import (
     BookingAggregate,
     BookingRepository,
@@ -11,27 +9,26 @@ from backend.contexts.booking.domain import (
 from backend.contexts.shared.domain import BookingId, DriverId, EventBus, ParkinglotId
 
 
-class CreateBookingCommand(BaseModel):
-    booking_id: BookingId
-    parkinglot_id: ParkinglotId
-    description: str
-    duration: Optional[timedelta] = None
-
-    def handle(
-        self,
-        driver_id: DriverId,
-        repo: BookingRepository,
-        bus: EventBus,
-    ):
-        booking = BookingAggregate.create(
-            self.booking_id,
-            driver_id,
-            self.parkinglot_id,
-            self.duration,
-            self.description,
-        )
-        repo.save(booking)
-        bus.publish(booking.pull_events())
+def create_booking(
+    booking_id: BookingId,
+    driver_id: DriverId,
+    parkinglot_id: ParkinglotId,
+    description: str,
+    duration: Optional[timedelta],
+    repo: BookingRepository,
+    bus: EventBus,
+) -> None:
+    if repo.get(booking_id, driver_id):
+        return
+    booking_aggregate = BookingAggregate.create(
+        id=booking_id,
+        driver_id=driver_id,
+        parkinglot_id=parkinglot_id,
+        duration=duration,
+        description=description,
+    )
+    repo.save(booking_aggregate)
+    bus.publish(booking_aggregate.pull_events())
 
 
 def cancel_booking_by_parkinglot(
