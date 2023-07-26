@@ -4,6 +4,7 @@ from typing import List, Protocol, TypeVar
 
 import ulid
 from pydantic import BaseModel, Field, PrivateAttr
+from pydantic.json import ENCODERS_BY_TYPE
 
 EventData = TypeVar("EventData")
 AggregateId = TypeVar("AggregateId")
@@ -25,6 +26,9 @@ class ULID(ulid.ULID):
             format="ulid",
             examples=[str(ULID()), str(ULID())],
         )
+
+
+ENCODERS_BY_TYPE[ULID] = str
 
 
 class BookingId(ULID):
