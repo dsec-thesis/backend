@@ -50,7 +50,7 @@ class DynamodbBookingRepository(BookingRepository):
                 "pk": str(driver_id),
                 "sk": self._format_sk(booking_id),
             }
-        )["Item"]
+        ).get("Item")
 
         return self._item_to_booking(item) if item else None
 

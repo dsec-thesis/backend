@@ -1,11 +1,10 @@
-from decimal import Decimal
 import json
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
 from pydantic import parse_obj_as
-
 
 from backend.contexts.parkinglot.domain import ParkinglotAggregate, ParkinglotRepository
 from backend.contexts.shared.domain import OwnerId, ParkinglotId
@@ -44,7 +43,7 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
             return None
         item = self._table.get_item(
             Key={"pk": str(owner_id), "sk": f"PARKINGLOT::{parkinglot_id}"}
-        )["Item"]
+        ).get("Item")
         return ParkinglotAggregate.parse_obj(self._parse_item(item)) if item else None
 
     def _format_sk(self, parkinglot_id: ParkinglotId) -> str:
