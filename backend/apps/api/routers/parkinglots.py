@@ -17,8 +17,8 @@ from backend.contexts.parkinglot.domain import ParkinglotAggregate, ParkinglotRe
 from backend.contexts.shared.domain import (
     EventBus,
     OwnerId,
-    ParkingSpaceId,
     ParkinglotId,
+    ParkingSpaceId,
 )
 
 router = APIRouter()
@@ -76,7 +76,7 @@ def get_parkinglot(
     if not (parkinglot := repo.get(parkinglot_id, owner_id)):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content=Message(message="Parkinglot not found"),
+            content=Message(message="Parkinglot not found").dict(),
         )
     return parkinglot
 

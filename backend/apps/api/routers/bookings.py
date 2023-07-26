@@ -68,7 +68,7 @@ def get_booking(
     if not (booking := bookings.get_booking(driver_id, booking_id, repo)):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content=Message(message="Booking not found"),
+            content=Message(message="Booking not found").dict(),
         )
     return booking
 
