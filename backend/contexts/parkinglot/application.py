@@ -1,5 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 from backend.contexts.parkinglot.domain import (
     Coordinates,
@@ -99,12 +101,51 @@ def list_parkinglots(
     return repo.list(owner_id)
 
 
-def get_parkinglot(
+def get_parkinglot_aggregate(
     owner_id: OwnerId,
     parkinglot_id: ParkinglotId,
     repo: ParkinglotRepository,
 ) -> Optional[ParkinglotAggregate]:
     return repo.get(parkinglot_id, owner_id)
+
+
+class Parkinglot(BaseModel):
+    id: ParkinglotId
+    name: str
+    street: str
+    coordinates: Coordinates
+    price: Price
+
+
+def get_parkinglot(
+    parkinglot_id: ParkinglotId,
+    repo: ParkinglotRepository,
+) -> Optional[Parkinglot]:
+    if not (parkinglot := repo.get(parkinglot_id=parkinglot_id)):
+        return None
+    return Parkinglot(**parkinglot.dict())
+
+
+class Space(BaseModel):
+    id: ParkingSpaceId
+    booked: bool
+    booked_util: Optional[datetime] = None
+
+
+def get_parkinglot_spaces(
+    parkinglot_id: ParkinglotId,
+    repo: ParkinglotRepository,
+) -> List[Space]:
+    if not (parkinglot := repo.get(parkinglot_id)):
+        return []
+    return [
+        Space(
+            id=s.id,
+            booked=bool(s.booked_by),
+            booked_util=s.booked_util,
+        )
+        for s in parkinglot.spaces
+    ]
 
 
 def release_space(
