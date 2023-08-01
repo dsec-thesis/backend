@@ -115,6 +115,7 @@ class Parkinglot(BaseModel):
     street: str
     coordinates: Coordinates
     price: Price
+    free_spaces: int
 
 
 def get_parkinglot(
