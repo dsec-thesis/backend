@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Protocol
@@ -8,6 +8,7 @@ from backend.contexts.shared.domain import (
     BookingId,
     DomainEvent,
     DriverId,
+    ParkingSpaceId,
     ParkinglotId,
 )
 
@@ -20,6 +21,7 @@ class BookingState(Enum):
 
 class AccommodatedBookingCanceled(DomainEvent):
     parkinglot_id: ParkinglotId
+    space_id: ParkingSpaceId
 
 
 class BookingCanceled(DomainEvent):
@@ -40,6 +42,9 @@ class BookingAggregate(AggregateRoot):
     duration: Optional[timedelta]
     state: BookingState
     price: Optional[Decimal]
+    start_time: Optional[datetime]
+    end_time: Optional[datetime]
+    space_id: Optional[ParkingSpaceId]
 
     @classmethod
     def create(
@@ -60,6 +65,9 @@ class BookingAggregate(AggregateRoot):
             duration=duration,
             state=BookingState.CREATED,
             price=None,
+            start_time=None,
+            end_time=None,
+            space_id=None,
         )
         booking.push_event(
             BookingCreated(
@@ -74,11 +82,12 @@ class BookingAggregate(AggregateRoot):
     def cancel(self) -> None:
         if self.state == BookingState.CANCELED:
             return
-        if self.state == BookingState.ACCOMMODATED:
+        if self.state == BookingState.ACCOMMODATED and self.space_id:
             self.push_event(
                 AccommodatedBookingCanceled(
                     aggregate_id=str(self.id),
                     parkinglot_id=self.parkinglot_id,
+                    space_id=self.space_id,
                 )
             )
         self.push_event(
@@ -88,12 +97,17 @@ class BookingAggregate(AggregateRoot):
             )
         )
         self.state = BookingState.CANCELED
-        self.refresh_updated_on()
 
-    def assign_price(self, price: Decimal) -> None:
+    def accomodate(self, price: Decimal, space_id: ParkingSpaceId) -> None:
         self.price = price
+        self.space_id = space_id
         self.state = BookingState.ACCOMMODATED
-        self.refresh_updated_on()
+
+    def start(self) -> None:
+        self.start_time = datetime.now()
+
+    def finish(self) -> None:
+        self.end_time = datetime.now()
 
     def pay(self) -> None:
         ...

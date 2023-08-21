@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Annotated, List
+from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, status
@@ -112,6 +113,63 @@ def register_spaces(
         parkinglot_id=parkinglot_id,
         space_ids=space_ids,
         owner_id=owner_id,
+        repo=repo,
+        bus=bus,
+    )
+
+
+@router.put("/{parkinglot_id}/collector", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+def register_collector(
+    parkinglot_id: ParkinglotId,
+    collector_id: Annotated[UUID, Body(embed=True)],
+    owner_id: OwnerId = Depends(get_user_id),
+    repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
+    bus: EventBus = Depends(Provide[Container.eventbus]),
+) -> None:
+    return parkinglots.register_collector(
+        parkinglot_id=parkinglot_id,
+        owner_id=owner_id,
+        collector_id=collector_id,
+        repo=repo,
+        bus=bus,
+    )
+
+
+@router.put("/{parkinglot_id}/spaces/{space_id}/take")
+@inject
+def take_space(
+    parkinglot_id: ParkinglotId,
+    space_id: ParkingSpaceId,
+    collector_id: UUID = Depends(get_user_id),
+    repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
+    bus: EventBus = Depends(Provide[Container.eventbus]),
+):
+    return parkinglots.collector_take_space(
+        parkinglot_id=parkinglot_id,
+        space_id=space_id,
+        collector_id=collector_id,
+        repo=repo,
+        bus=bus,
+    )
+
+
+@router.put("/{parkinglot_id}/spaces/{space_id}/realease")
+@inject
+def release_space(
+    parkinglot_id: ParkinglotId,
+    space_id: ParkingSpaceId,
+    collector_id: UUID = Depends(get_user_id),
+    repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
+    bus: EventBus = Depends(Provide[Container.eventbus]),
+):
+    print(parkinglot_id)
+    print(space_id)
+    print(collector_id)
+    return parkinglots.collector_release_space(
+        parkinglot_id=parkinglot_id,
+        space_id=space_id,
+        collector_id=collector_id,
         repo=repo,
         bus=bus,
     )

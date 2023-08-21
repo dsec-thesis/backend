@@ -31,7 +31,7 @@ def handle_accommodated_booking_canceled(
 ) -> None:
     return parkinglots.release_space(
         parkinglot_id=event.parkinglot_id,
-        booking_id=BookingId.from_str(event.aggregate_id),
+        space_id=event.space_id,
         repo=repo,
         bus=bus,
     )

@@ -7,6 +7,8 @@ from backend.apps.container import Container
 from backend.apps.events.booking import (
     handle_booking_accommodated,
     handle_booking_refused,
+    handle_driver_arrived,
+    handle_driver_left,
 )
 from backend.apps.events.parkinglot import (
     handle_accommodated_booking_canceled,
@@ -20,6 +22,8 @@ from backend.contexts.booking.domain import (
 from backend.contexts.parkinglot.domain import (
     BookingAccommodated,
     BookingRefused,
+    DriverArrived,
+    DriverLeft,
     ParkinglotCreated,
     ParkingSpaceCreated,
 )
@@ -54,7 +58,9 @@ register: Dict[str, Tuple[Type[DomainEvent], List[EventHandler]]] = {
     ),
     "AccommodatedBookingCanceled": (
         AccommodatedBookingCanceled,
-        [handle_accommodated_booking_canceled],
+        [
+            handle_accommodated_booking_canceled,
+        ],
     ),
     "BookingRefused": (
         BookingRefused,
@@ -78,6 +84,18 @@ register: Dict[str, Tuple[Type[DomainEvent], List[EventHandler]]] = {
         ParkingSpaceCreated,
         [
             null_handler,
+        ],
+    ),
+    "DriverArrived": (
+        DriverArrived,
+        [
+            handle_driver_arrived,
+        ],
+    ),
+    "DriverLeft": (
+        DriverLeft,
+        [
+            handle_driver_left,
         ],
     ),
 }

@@ -19,6 +19,7 @@ class DynamodbBookingRepository(BookingRepository):
         self._table = resource.Table(table_name)
 
     def save(self, booking: BookingAggregate) -> None:
+        booking.refresh_updated_on()
         item = json.loads(
             booking.json(exclude={"id", "driver_id", "version"}),
             parse_float=Decimal,

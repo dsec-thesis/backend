@@ -17,6 +17,7 @@ class DynamodbParkinglotRepository(ParkinglotRepository):
         self._table = resource.Table(table_name)
 
     def save(self, parkinglot: ParkinglotAggregate) -> None:
+        parkinglot.refresh_updated_on()
         item = json.loads(
             parkinglot.json(exclude={"id", "owner_id", "version"}),
             parse_float=Decimal,

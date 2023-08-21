@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -59,6 +60,21 @@ def accomodate_booking(
         booking_id=booking_id,
         booking_duration=booking_duration,
     )
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
+
+
+def register_collector(
+    parkinglot_id: ParkinglotId,
+    owner_id: OwnerId,
+    collector_id: UUID,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+) -> None:
+    if not (parkinglot := repo.get(parkinglot_id, owner_id)):
+        return None
+    parkinglot.register_collector(collector_id)
     repo.save(parkinglot)
     bus.publish(parkinglot.pull_events())
     return None
@@ -151,13 +167,48 @@ def get_parkinglot_spaces(
 
 def release_space(
     parkinglot_id: ParkinglotId,
-    booking_id: BookingId,
+    space_id: ParkingSpaceId,
     repo: ParkinglotRepository,
     bus: EventBus,
 ) -> None:
     if not (parkinglot := repo.get(parkinglot_id)):
         return None
-    parkinglot.release_space(booking_id)
+    parkinglot.release_space(space_id)
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
+
+
+def collector_take_space(
+    parkinglot_id: ParkinglotId,
+    space_id: ParkingSpaceId,
+    collector_id: UUID,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+):
+    if not (parkinglot := repo.get(parkinglot_id)):
+        return None
+    if collector_id != parkinglot.collector_id:
+        return None
+    parkinglot.take_space(space_id)
+    repo.save(parkinglot)
+    bus.publish(parkinglot.pull_events())
+    return None
+
+
+def collector_release_space(
+    parkinglot_id: ParkinglotId,
+    space_id: ParkingSpaceId,
+    collector_id: UUID,
+    repo: ParkinglotRepository,
+    bus: EventBus,
+):
+    if not (parkinglot := repo.get(parkinglot_id)):
+        return None
+    if collector_id != parkinglot.collector_id:
+        return None
+    parkinglot.release_space(space_id)
+    print(parkinglot)
     repo.save(parkinglot)
     bus.publish(parkinglot.pull_events())
     return None

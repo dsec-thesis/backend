@@ -6,7 +6,13 @@ from backend.contexts.booking.domain import (
     BookingAggregate,
     BookingRepository,
 )
-from backend.contexts.shared.domain import BookingId, DriverId, EventBus, ParkinglotId
+from backend.contexts.shared.domain import (
+    BookingId,
+    DriverId,
+    EventBus,
+    ParkingSpaceId,
+    ParkinglotId,
+)
 
 
 def create_booking(
@@ -74,14 +80,39 @@ def get_booking(
     return repo.get(booking_id, driver_id)
 
 
-def assign_price(
+def accomodate(
     booking_id: BookingId,
     price: Decimal,
+    space_id: ParkingSpaceId,
     repo: BookingRepository,
     bus: EventBus,
 ) -> None:
     if not (booking := repo.get(booking_id)):
         return
-    booking.assign_price(price)
+    booking.accomodate(price, space_id)
+    repo.save(booking)
+    bus.publish(booking.pull_events())
+
+
+def start(
+    booking_id: BookingId,
+    repo: BookingRepository,
+    bus: EventBus,
+) -> None:
+    if not (booking := repo.get(booking_id)):
+        return
+    booking.start()
+    repo.save(booking)
+    bus.publish(booking.pull_events())
+
+
+def finish(
+    booking_id: BookingId,
+    repo: BookingRepository,
+    bus: EventBus,
+) -> None:
+    if not (booking := repo.get(booking_id)):
+        return
+    booking.finish()
     repo.save(booking)
     bus.publish(booking.pull_events())
