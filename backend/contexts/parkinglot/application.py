@@ -65,16 +65,16 @@ def accomodate_booking(
     return None
 
 
-def register_collector(
+def register_concentrator(
     parkinglot_id: ParkinglotId,
     owner_id: OwnerId,
-    collector_id: UUID,
+    concentrator_id: UUID,
     repo: ParkinglotRepository,
     bus: EventBus,
 ) -> None:
     if not (parkinglot := repo.get(parkinglot_id, owner_id)):
         return None
-    parkinglot.register_collector(collector_id)
+    parkinglot.register_concentrator(concentrator_id)
     repo.save(parkinglot)
     bus.publish(parkinglot.pull_events())
     return None
@@ -179,16 +179,16 @@ def release_space(
     return None
 
 
-def collector_take_space(
+def concentrator_take_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    collector_id: UUID,
+    concentrator_id: UUID,
     repo: ParkinglotRepository,
     bus: EventBus,
 ):
     if not (parkinglot := repo.get(parkinglot_id)):
         return None
-    if collector_id != parkinglot.collector_id:
+    if concentrator_id != parkinglot.concentrator_id:
         return None
     parkinglot.take_space(space_id)
     repo.save(parkinglot)
@@ -196,16 +196,16 @@ def collector_take_space(
     return None
 
 
-def collector_release_space(
+def concentrator_release_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    collector_id: UUID,
+    concentrator_id: UUID,
     repo: ParkinglotRepository,
     bus: EventBus,
 ):
     if not (parkinglot := repo.get(parkinglot_id)):
         return None
-    if collector_id != parkinglot.collector_id:
+    if concentrator_id != parkinglot.concentrator_id:
         return None
     parkinglot.release_space(space_id)
     print(parkinglot)

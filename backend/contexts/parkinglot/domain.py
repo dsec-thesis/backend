@@ -66,7 +66,7 @@ class ParkinglotAggregate(AggregateRoot):
     coordinates: Coordinates
     h3cell: str
     price: Price
-    collector_id: Optional[UUID]
+    concentrator_id: Optional[UUID]
     free_spaces: int = 0
     spaces: List[ParkingSpace] = Field(default_factory=list)
 
@@ -90,7 +90,7 @@ class ParkinglotAggregate(AggregateRoot):
             coordinates=coordinates,
             h3cell=h3.latlng_to_cell(coordinates.lat, coordinates.lng, 8),
             price=price,
-            collector_id=None,
+            concentrator_id=None,
         )
         parkinglot.push_event(
             ParkinglotCreated(
@@ -103,8 +103,8 @@ class ParkinglotAggregate(AggregateRoot):
         )
         return parkinglot
 
-    def register_collector(self, collector_id: UUID) -> None:
-        self.collector_id = collector_id
+    def register_concentrator(self, concentrator_id: UUID) -> None:
+        self.concentrator_id = concentrator_id
 
     def change_price(self, price: Price) -> None:
         self.price = price

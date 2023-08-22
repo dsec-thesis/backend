@@ -118,19 +118,19 @@ def register_spaces(
     )
 
 
-@router.put("/{parkinglot_id}/collector", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{parkinglot_id}/concentrator", status_code=status.HTTP_204_NO_CONTENT)
 @inject
-def register_collector(
+def register_concentrator(
     parkinglot_id: ParkinglotId,
-    collector_id: Annotated[UUID, Body(embed=True)],
+    concentrator_id: Annotated[UUID, Body(embed=True)],
     owner_id: OwnerId = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ) -> None:
-    return parkinglots.register_collector(
+    return parkinglots.register_concentrator(
         parkinglot_id=parkinglot_id,
         owner_id=owner_id,
-        collector_id=collector_id,
+        concentrator_id=concentrator_id,
         repo=repo,
         bus=bus,
     )
@@ -141,14 +141,14 @@ def register_collector(
 def take_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    collector_id: UUID = Depends(get_user_id),
+    concentrator_id: UUID = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
-    return parkinglots.collector_take_space(
+    return parkinglots.concentrator_take_space(
         parkinglot_id=parkinglot_id,
         space_id=space_id,
-        collector_id=collector_id,
+        concentrator_id=concentrator_id,
         repo=repo,
         bus=bus,
     )
@@ -159,17 +159,17 @@ def take_space(
 def release_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    collector_id: UUID = Depends(get_user_id),
+    concentrator_id: UUID = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
     print(parkinglot_id)
     print(space_id)
-    print(collector_id)
-    return parkinglots.collector_release_space(
+    print(concentrator_id)
+    return parkinglots.concentrator_release_space(
         parkinglot_id=parkinglot_id,
         space_id=space_id,
-        collector_id=collector_id,
+        concentrator_id=concentrator_id,
         repo=repo,
         bus=bus,
     )
