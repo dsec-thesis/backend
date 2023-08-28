@@ -26,6 +26,7 @@ class Coordinates(BaseModel):
 
 class ParkingSpace(BaseModel):
     id: ParkingSpaceId
+    internal_id: int
     booked_by: Optional[DriverId] = None
     booked_from: Optional[datetime] = None
     booked_util: Optional[datetime] = None
@@ -165,7 +166,11 @@ class ParkinglotAggregate(AggregateRoot):
         return None
 
     def register_spaces(self, space_ids: List[ParkingSpaceId]) -> None:
-        spaces = [ParkingSpace(id=space_id) for space_id in space_ids]
+        initial_internal_id = len(self.spaces)
+        spaces = [
+            ParkingSpace(id=space_id, internal_id=initial_internal_id + i)
+            for i, space_id in enumerate(space_ids)
+        ]
         self.free_spaces += len(spaces)
         self.spaces.extend(spaces)
         for space in spaces:
