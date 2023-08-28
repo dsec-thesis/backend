@@ -13,7 +13,10 @@ from backend.apps.api.routers.models import (
 from backend.apps.container import Container
 from backend.contexts.booking import application as bookings
 from backend.contexts.booking.application import BookingRepository
-from backend.contexts.booking.domain import BookingAggregate
+from backend.contexts.booking.domain import (
+    BookingAggregate,
+    BookingInProgressCannotBeCanceled,
+)
 from backend.contexts.shared.domain import BookingId, DriverId, EventBus
 
 router = APIRouter()
@@ -73,7 +76,13 @@ def get_booking(
     return booking
 
 
-@router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{booking_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_409_CONFLICT: {"model": Message},
+    },
+)
 @inject
 def cancel_booking(
     booking_id: BookingId,
@@ -81,9 +90,15 @@ def cancel_booking(
     repo: BookingRepository = Depends(Provide[Container.booking_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
-    return bookings.cancel_booking_by_driver(
-        booking_id=booking_id,
-        driver_id=driver_id,
-        repo=repo,
-        bus=bus,
-    )
+    try:
+        return bookings.cancel_booking_by_driver(
+            booking_id=booking_id,
+            driver_id=driver_id,
+            repo=repo,
+            bus=bus,
+        )
+    except BookingInProgressCannotBeCanceled as e:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content=Message(message=str(e)).dict(),
+        )

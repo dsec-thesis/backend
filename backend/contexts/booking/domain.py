@@ -82,6 +82,8 @@ class BookingAggregate(AggregateRoot):
     def cancel(self) -> None:
         if self.state == BookingState.CANCELED:
             return
+        if self.start_time:
+            raise BookingInProgressCannotBeCanceled
         if self.state == BookingState.ACCOMMODATED and self.space_id:
             self.push_event(
                 AccommodatedBookingCanceled(
@@ -129,3 +131,8 @@ class BookingRepository(Protocol):
         driver_id: DriverId,
     ) -> List[BookingAggregate]:
         ...
+
+
+class BookingInProgressCannotBeCanceled(Exception):
+    def __str__(self) -> str:
+        return "Booking in progress cannot be canceled"
