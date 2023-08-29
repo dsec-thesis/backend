@@ -6,7 +6,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.responses import JSONResponse
 
-from backend.apps.api.dependencies import get_user_id
+from backend.apps.api.dependencies import get_owner_id, get_user_id
 from backend.apps.api.routers.models import (
     CreateParkinglotRequest,
     ListParkinglotsResponse,
@@ -30,7 +30,7 @@ router = APIRouter()
 @inject
 def create_parkinglot(
     data: CreateParkinglotRequest,
-    owner_id: OwnerId = Depends(get_user_id),
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
@@ -54,7 +54,7 @@ def create_parkinglot(
 )
 @inject
 def list_parkinglots(
-    owner_id: OwnerId = Depends(get_user_id),
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
 ):
     return ListParkinglotsResponse(
@@ -72,7 +72,7 @@ def list_parkinglots(
 @inject
 def get_parkinglot(
     parkinglot_id: ParkinglotId,
-    owner_id: OwnerId = Depends(get_user_id),
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
 ):
     if not (parkinglot := repo.get(parkinglot_id, owner_id)):
@@ -88,7 +88,7 @@ def get_parkinglot(
 def change_price(
     parkinglot_id: ParkinglotId,
     price: Annotated[Decimal, Body(embed=True)],
-    owner_id: OwnerId = Depends(get_user_id),
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
@@ -106,7 +106,7 @@ def change_price(
 def register_spaces(
     parkinglot_id: ParkinglotId,
     space_ids: Annotated[List[ParkingSpaceId], Body(embed=True)],
-    owner_id: OwnerId = Depends(get_user_id),
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ) -> None:
@@ -123,8 +123,8 @@ def register_spaces(
 @inject
 def register_concentrator(
     parkinglot_id: ParkinglotId,
-    concentrator_id: Annotated[UUID, Body(embed=True)],
-    owner_id: OwnerId = Depends(get_user_id),
+    concentrator_id: Annotated[str, Body(embed=True)],
+    owner_id: OwnerId = Depends(get_owner_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ) -> None:
@@ -158,7 +158,7 @@ def list_spaces(
 def take_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    concentrator_id: UUID = Depends(get_user_id),
+    concentrator_id: str = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
@@ -176,7 +176,7 @@ def take_space(
 def release_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    concentrator_id: UUID = Depends(get_user_id),
+    concentrator_id: str = Depends(get_user_id),
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):

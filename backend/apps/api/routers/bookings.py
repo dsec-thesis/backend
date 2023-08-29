@@ -2,9 +2,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
-from backend.apps.api.dependencies import (
-    get_user_id,
-)
+from backend.apps.api.dependencies import get_driver_id
 from backend.apps.api.routers.models import (
     CreateBookingRequest,
     ListBookingResponse,
@@ -26,7 +24,7 @@ router = APIRouter()
 @inject
 def create_booking(
     data: CreateBookingRequest,
-    driver_id: DriverId = Depends(get_user_id),
+    driver_id: DriverId = Depends(get_driver_id),
     repo: BookingRepository = Depends(Provide[Container.booking_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
@@ -49,7 +47,7 @@ def create_booking(
 )
 @inject
 def list_bookings(
-    driver_id: DriverId = Depends(get_user_id),
+    driver_id: DriverId = Depends(get_driver_id),
     repo: BookingRepository = Depends(Provide[Container.booking_repository]),
 ):
     return ListBookingResponse(bookings=bookings.list_bookings(driver_id, repo))
@@ -65,7 +63,7 @@ def list_bookings(
 @inject
 def get_booking(
     booking_id: BookingId,
-    driver_id: DriverId = Depends(get_user_id),
+    driver_id: DriverId = Depends(get_driver_id),
     repo: BookingRepository = Depends(Provide[Container.booking_repository]),
 ):
     if not (booking := bookings.get_booking(driver_id, booking_id, repo)):
@@ -86,7 +84,7 @@ def get_booking(
 @inject
 def cancel_booking(
     booking_id: BookingId,
-    driver_id: DriverId = Depends(get_user_id),
+    driver_id: DriverId = Depends(get_driver_id),
     repo: BookingRepository = Depends(Provide[Container.booking_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):

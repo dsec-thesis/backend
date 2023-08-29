@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional, Protocol
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 import h3
@@ -67,7 +66,7 @@ class ParkinglotAggregate(AggregateRoot):
     coordinates: Coordinates
     h3cell: str
     price: Price
-    concentrator_id: Optional[UUID]
+    concentrator_id: Optional[str]
     free_spaces: int = 0
     spaces: List[ParkingSpace] = Field(default_factory=list)
 
@@ -104,7 +103,7 @@ class ParkinglotAggregate(AggregateRoot):
         )
         return parkinglot
 
-    def register_concentrator(self, concentrator_id: UUID) -> None:
+    def register_concentrator(self, concentrator_id: str) -> None:
         self.concentrator_id = concentrator_id
 
     def change_price(self, price: Price) -> None:

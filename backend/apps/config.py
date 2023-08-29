@@ -1,5 +1,4 @@
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseSettings
 
@@ -12,7 +11,7 @@ class Settings(BaseSettings):
     inverted_index: str = ""
     sns_topic_arn: str = ""
     env: Env = "local"
-    test_user_id: UUID = UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    test_user_id: str = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 
     class Config:
         frozen = True

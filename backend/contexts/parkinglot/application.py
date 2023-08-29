@@ -69,7 +69,7 @@ def accomodate_booking(
 def register_concentrator(
     parkinglot_id: ParkinglotId,
     owner_id: OwnerId,
-    concentrator_id: UUID,
+    concentrator_id: str,
     repo: ParkinglotRepository,
     bus: EventBus,
 ) -> None:
@@ -195,7 +195,7 @@ def release_space(
 def concentrator_take_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    concentrator_id: UUID,
+    concentrator_id: str,
     repo: ParkinglotRepository,
     bus: EventBus,
 ):
@@ -212,7 +212,7 @@ def concentrator_take_space(
 def concentrator_release_space(
     parkinglot_id: ParkinglotId,
     space_id: ParkingSpaceId,
-    concentrator_id: UUID,
+    concentrator_id: str,
     repo: ParkinglotRepository,
     bus: EventBus,
 ):
