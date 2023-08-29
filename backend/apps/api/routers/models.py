@@ -4,7 +4,12 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from backend.contexts.booking.domain import BookingAggregate
-from backend.contexts.parkinglot.domain import Coordinates, ParkinglotAggregate, Price
+from backend.contexts.parkinglot.domain import (
+    Coordinates,
+    ParkingSpace,
+    ParkinglotAggregate,
+    Price,
+)
 from backend.contexts.shared.domain import BookingId, ParkinglotId
 
 
@@ -33,3 +38,7 @@ class CreateParkinglotRequest(BaseModel):
 
 class ListParkinglotsResponse(BaseModel):
     parkinglots: List[ParkinglotAggregate]
+
+
+class ListParkinglotsSpacesResponse(BaseModel):
+    spaces: List[ParkingSpace]

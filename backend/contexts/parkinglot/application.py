@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from backend.contexts.parkinglot.domain import (
     Coordinates,
+    ParkingSpace,
     ParkinglotAggregate,
     ParkinglotRepository,
     Price,
@@ -123,6 +124,18 @@ def get_parkinglot_aggregate(
     repo: ParkinglotRepository,
 ) -> Optional[ParkinglotAggregate]:
     return repo.get(parkinglot_id, owner_id)
+
+
+def list_parkinglot_spaces(
+    user_id: UUID,
+    parkinglot_id: ParkinglotId,
+    repo: ParkinglotRepository,
+) -> List[ParkingSpace]:
+    if not (parkinglot := repo.get(parkinglot_id)):
+        return []
+    if user_id not in (parkinglot.owner_id, parkinglot.concentrator_id):
+        return []
+    return parkinglot.spaces
 
 
 class Parkinglot(BaseModel):

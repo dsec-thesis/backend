@@ -10,6 +10,7 @@ from backend.apps.api.dependencies import get_user_id
 from backend.apps.api.routers.models import (
     CreateParkinglotRequest,
     ListParkinglotsResponse,
+    ListParkinglotsSpacesResponse,
     Message,
 )
 from backend.apps.container import Container
@@ -136,6 +137,22 @@ def register_concentrator(
     )
 
 
+@router.get("/{parkinglot_id}/spaces")
+@inject
+def list_spaces(
+    parkinglot_id: ParkinglotId,
+    user_id: UUID = Depends(get_user_id),
+    repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
+):
+    return ListParkinglotsSpacesResponse(
+        spaces=parkinglots.list_parkinglot_spaces(
+            parkinglot_id=parkinglot_id,
+            user_id=user_id,
+            repo=repo,
+        )
+    )
+
+
 @router.put("/{parkinglot_id}/spaces/{space_id}/take")
 @inject
 def take_space(
@@ -163,9 +180,6 @@ def release_space(
     repo: ParkinglotRepository = Depends(Provide[Container.parkinglot_repository]),
     bus: EventBus = Depends(Provide[Container.eventbus]),
 ):
-    print(parkinglot_id)
-    print(space_id)
-    print(concentrator_id)
     return parkinglots.concentrator_release_space(
         parkinglot_id=parkinglot_id,
         space_id=space_id,
