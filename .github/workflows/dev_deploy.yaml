@@ -1,0 +1,41 @@
+name: Serverless deploy
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: Dev Deploy
+    environment: dev
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: snok/install-poetry@v1
+        with:
+          version: 1.4.2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
+      - run: poetry install
+      - run: poetry run black --check backend
+      - run: poetry run pytest
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASUME }}
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - run: npm ci
+      - uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          envkey_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      - run: npx serverless deploy --stage ${{ vars.SLS_STAGE }} --region ${{ vars.AWS_DEFAULT_REGION }}
